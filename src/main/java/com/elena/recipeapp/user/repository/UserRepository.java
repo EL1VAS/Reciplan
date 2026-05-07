@@ -12,6 +12,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByUsername(String username);
     Optional<User> findByEmail(String email);
+    
+    //When we want to just check if user exists without calling the full table row and then discard it
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
 
