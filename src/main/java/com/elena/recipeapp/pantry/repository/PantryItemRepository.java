@@ -25,6 +25,6 @@ public interface PantryItemRepository extends JpaRepository<PantryItem, Long> {
     List<PantryItem> findByUserIdAndIngredientCategoryId(Long userId, Long categoryId);
 
     //If a specific ingredient is in the pantry
-    boolean existsByUserIdAndIngredientsId(Long userId, Long ingredientsId);
+    boolean existsByUserIdAndIngredientId(Long userId, Long ingredientId);
 
 }

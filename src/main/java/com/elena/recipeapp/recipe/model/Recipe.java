@@ -62,7 +62,7 @@ public class Recipe {
     private Difficulty difficulty;
 
     @Column(nullable = false)
-    private boolean vegeterian;
+    private boolean vegetarian;
 
     @Column(nullable = false)
     private boolean lactoseFree;
