@@ -1,7 +1,7 @@
 package com.elena.recipeapp.recipe.repository;
 
 
-import org.springdoc.core.converters.models.Pageable;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -11,9 +11,7 @@ import com.elena.recipeapp.recipe.model.Recipe;
 
 @Repository
 public interface RecipeRepository extends JpaRepository<Recipe, Long> {
-    //All recipes
-    Page<Recipe> findAll(Pageable pageable);
-
+    
     //Filter by dietary conditions
     Page<Recipe> findByVegetarianTrue(Pageable pageable);
     Page<Recipe> findByLactoseFreeTrue(Pageable pageable);
