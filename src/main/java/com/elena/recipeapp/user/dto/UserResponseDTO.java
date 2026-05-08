@@ -1,0 +1,22 @@
+package com.elena.recipeapp.user.dto;
+
+import com.elena.recipeapp.enums.Roles;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class UserResponseDTO {
+    
+    private Long id;
+    private String username;
+    private String email;
+    private Roles role;
+}
