@@ -71,7 +71,7 @@ public class Recipe {
     private boolean glutenFree;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "createdBy", nullable = false)
+    @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
 
     @OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)

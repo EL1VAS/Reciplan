@@ -15,7 +15,7 @@ public interface RecipeMapper {
     
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
-    @Mapping(target = "instructions", ignore = true)
+    @Mapping(target = "recipeIngredients", ignore = true)
     Recipe toEntity(RecipeRequestDTO dto);
 
     @Mapping(source = "createdBy.username", target = "createdByUsername")

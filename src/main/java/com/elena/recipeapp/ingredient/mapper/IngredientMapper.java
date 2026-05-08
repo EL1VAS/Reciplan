@@ -9,7 +9,8 @@ import com.elena.recipeapp.ingredient.model.Ingredient;
 
 @Mapper(componentModel = "spring")
 public interface IngredientMapper {
-    
+
+    @Mapping(target = "id", ignore = true)
     @Mapping(target = "category", ignore = true)
     Ingredient toEntity(IngredientRequestDTO dto);
 

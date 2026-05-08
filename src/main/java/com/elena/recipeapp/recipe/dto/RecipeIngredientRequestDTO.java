@@ -15,6 +15,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class RecipeIngredientRequestDTO {
+    
     @NotNull
     private Long ingredientId;
 
