@@ -26,5 +26,5 @@ public class RecipeResponseDTO {
     private boolean lactoseFree;
     private boolean glutenFree;
     private String createdByUsername;
-    private List<RecipeIngredientResponseDTO> ingredients;
+    private List<RecipeIngredientResponseDTO> recipeIngredients;
 }
