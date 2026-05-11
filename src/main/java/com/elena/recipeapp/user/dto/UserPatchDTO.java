@@ -13,7 +13,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserUpdateRequestDTO {
+public class UserPatchDTO {
 
     //Not added @NotBlank in case they want a partial update of either username or email
     @Size(min = 3, max = 50)
