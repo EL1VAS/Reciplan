@@ -50,7 +50,7 @@ public class User implements UserDetails {
     private String email;
 
     @NotBlank
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String password;
 
     @Enumerated(EnumType.STRING)
