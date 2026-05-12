@@ -18,4 +18,7 @@ public interface RecipeRepository extends JpaRepository<Recipe, Long>, JpaSpecif
     //If this recipe exists
     boolean existsByTitleIgnoreCase(String title);
 
+    // Check if recipe belongs to user (for ownership check)
+    boolean existsByIdAndCreatedById(Long id, Long userId);
+
 }
