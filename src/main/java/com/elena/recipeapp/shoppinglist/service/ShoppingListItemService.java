@@ -6,9 +6,6 @@ import org.springframework.stereotype.Service;
 
 import com.elena.recipeapp.ingredient.model.Ingredient;
 import com.elena.recipeapp.ingredient.repository.IngredientRepository;
-import com.elena.recipeapp.pantry.dto.PantryItemPatchDTO;
-import com.elena.recipeapp.pantry.dto.PantryItemResponseDTO;
-import com.elena.recipeapp.pantry.model.PantryItem;
 import com.elena.recipeapp.shoppinglist.dto.ShoppingListItemPatchDTO;
 import com.elena.recipeapp.shoppinglist.dto.ShoppingListItemRequestDTO;
 import com.elena.recipeapp.shoppinglist.dto.ShoppingListItemResponseDTO;
@@ -120,7 +117,7 @@ public class ShoppingListItemService {
         
         List<ShoppingListItem> checkedItems = shoppingListItemRepository.findByUserIdAndChecked(userId, true);
         shoppingListItemRepository.deleteAll(checkedItems);
-        
+
         log.debug("Cleared {} checked items for user id: {}", checkedItems.size(), userId);
     }
 
