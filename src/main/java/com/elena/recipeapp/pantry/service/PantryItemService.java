@@ -38,7 +38,7 @@ public class PantryItemService {
         }
 
         User user = findUserById(userId);
-        Ingredient ingredient = findIngredinetById(dto.getIngredientId());
+        Ingredient ingredient = findIngredientById(dto.getIngredientId());
 
         PantryItem pantryItem = pantryItemMapper.toEntity(dto);
         pantryItem.setUser(user);
@@ -86,7 +86,7 @@ public class PantryItemService {
 
         //Mapper has excluded this option so we set it here
         if(dto.getIngredientId() != null) {
-            Ingredient ingredient = findIngredinetById(dto.getIngredientId());
+            Ingredient ingredient = findIngredientById(dto.getIngredientId());
             pantryItem.setIngredient(ingredient);
         }
 
@@ -117,7 +117,7 @@ public class PantryItemService {
         });
     }
 
-    private Ingredient findIngredinetById(Long id) {
+    private Ingredient findIngredientById(Long id) {
         return ingredientRepository.findById(id).orElseThrow(() -> {
             log.warn("Ingredient not found with id: {}", id);
             return new RuntimeException("Ingredient not found with id: " + id);
