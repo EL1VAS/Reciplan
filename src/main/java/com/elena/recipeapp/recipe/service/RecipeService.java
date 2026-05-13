@@ -2,18 +2,24 @@ package com.elena.recipeapp.recipe.service;
 
 import java.util.List;
 
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import com.elena.recipeapp.enums.Difficulty;
 import com.elena.recipeapp.ingredient.model.Ingredient;
 import com.elena.recipeapp.ingredient.repository.IngredientRepository;
 import com.elena.recipeapp.recipe.dto.RecipeIngredientRequestDTO;
+import com.elena.recipeapp.recipe.dto.RecipePatchDTO;
 import com.elena.recipeapp.recipe.dto.RecipeRequestDTO;
 import com.elena.recipeapp.recipe.dto.RecipeResponseDTO;
 import com.elena.recipeapp.recipe.mapper.RecipeMapper;
 import com.elena.recipeapp.recipe.model.Recipe;
 import com.elena.recipeapp.recipe.model.RecipeIngredients;
-import com.elena.recipeapp.recipe.repository.RecipeIngredientsRepository;
 import com.elena.recipeapp.recipe.repository.RecipeRepository;
+import com.elena.recipeapp.recipe.specification.RecipeSpecification;
 import com.elena.recipeapp.user.model.User;
 import com.elena.recipeapp.user.repository.UserRepository;
 
@@ -33,10 +39,85 @@ public class RecipeService {
     public RecipeResponseDTO create(Long userId, RecipeRequestDTO dto) {
         log.info("Creating recipe: {} by user id: {}", dto.getTitle(), userId);
 
-        User user = 
+        User user = findUserById(userId);
+        //Set the createdBy
+        Recipe recipe = recipeMapper.toEntity(dto);
+        recipe.setCreatedBy(user);
 
+        //Build recipe ingredients list
+        List<RecipeIngredients> recipeIngredients = buildIngredientLines(dto.getRecipeIngredients(), recipe);
+        recipe.setRecipeIngredients(recipeIngredients);
 
+        Recipe saved = recipeRepository.save(recipe);
+        log.debug("Created new recipe with id: {}", saved.getId());
+
+        return recipeMapper.toDto(saved);
     }
+
+    public Page<RecipeResponseDTO> getAll(
+        String title,
+        Difficulty difficulty,
+        Integer maxPrepTime,
+        Boolean vegetarian,
+        Boolean lactoseFree,
+        Boolean glutenFree,
+        Pageable pageable) {
+            log.info("Fetching recipes with filters");
+
+            Specification<Recipe> spec = Specification.where(null);
+
+            if(title != null)   spec = spec.and(RecipeSpecification.hasTitle(title));
+            if(difficulty != null)   spec = spec.and(RecipeSpecification.hasDifficulty(difficulty));
+            if(maxPrepTime != null)   spec = spec.and(RecipeSpecification.maxPrepTime(maxPrepTime));
+            if(Boolean.TRUE.equals(vegetarian))   spec = spec.and(RecipeSpecification.isVegetarian());
+            if(Boolean.TRUE.equals(lactoseFree))   spec = spec.and(RecipeSpecification.isLactoseFree());
+            if(Boolean.TRUE.equals(glutenFree))   spec = spec.and(RecipeSpecification.isGlutenFree());
+
+            return recipeRepository.findAll(spec, pageable).map(recipeMapper :: toDto);
+    }
+
+    public RecipeResponseDTO getById(Long id) {
+        log.info("Fetching recipe with id: {}", id);
+        return recipeMapper.toDto(findRecipeById(id));
+    }
+
+    public Page<RecipeResponseDTO> getByIngredient(Long ingredientId, Pageable pageable) {
+        log.info("Fetching recipes that include ingredient with id: {}", ingredientId);
+        return recipeRepository.findByRecipeIngredientsIngredientId(ingredientId, pageable).map(recipeMapper :: toDto);
+    }
+ 
+    public RecipeResponseDTO patch(Long userId, Long id, RecipePatchDTO dto) {
+        log.info("Updating recipe with id: {}", id);
+        Recipe recipe = findRecipeById(id);
+        checkOwnership(userId, id);
+
+        recipeMapper.patchRecipe(dto, recipe);
+
+        //If ingredient list is present delete the whole list
+        if(dto.getRecipeIngredients() != null && !dto.getRecipeIngredients().isEmpty()) {
+            recipe.getRecipeIngredients().clear();
+            //And create new list 
+            List<RecipeIngredients> newIngredients = buildIngredientLines(dto.getRecipeIngredients(), recipe);
+            recipe.getRecipeIngredients().addAll(newIngredients);
+        }
+
+        
+        Recipe saved = recipeRepository.save(recipe);
+        log.debug("Recipe saved with id: {}", saved.getId());
+
+        return recipeMapper.toDto(saved);
+    }
+
+    public void delete(Long userId, Long id) {
+        findRecipeById(id);
+        checkOwnership(userId, id);
+        recipeRepository.deleteById(id);
+        log.debug("Deleted recipe with id: {} created by user id: {}", id, userId);
+    }
+
+
+
+
 
     //Helper methods
     private Recipe findRecipeById(Long id) {
@@ -73,6 +154,5 @@ public class RecipeService {
                                     .unit(dto.getUnit())
                                     .build();
             }).toList();        
-        }
-        
+        }   
 }
