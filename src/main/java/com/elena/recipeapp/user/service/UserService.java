@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.elena.recipeapp.common.exceptions.InvalidPasswordException;
 import com.elena.recipeapp.common.exceptions.ResourceNotFoundException;
 import com.elena.recipeapp.user.dto.ChangePasswordRequestDTO;
 import com.elena.recipeapp.user.dto.UserPatchDTO;
@@ -54,7 +55,7 @@ public class UserService {
 
         if(!passwordEncoder.matches(dto.getCurrentPassword(), user.getPassword())) {
             log.warn("Password change failed for user with id: {} - wrong current password", id);
-            throw new RuntimeException("Current password is incorrect");
+            throw new InvalidPasswordException("Current password is incorrect");
         }
 
         user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
