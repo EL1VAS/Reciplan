@@ -9,6 +9,7 @@ import com.elena.recipeapp.category.dto.CategoryResponseDTO;
 import com.elena.recipeapp.category.mapper.CategoryMapper;
 import com.elena.recipeapp.category.model.Category;
 import com.elena.recipeapp.category.repository.CategoryRepository;
+import com.elena.recipeapp.common.exceptions.ResourceNotFoundException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,20 +40,14 @@ public class CategoryService {
     public CategoryResponseDTO getById(Long id) {
         log.info("Fetching category with id: {}", id);
 
-        Category category = categoryRepository.findById(id).orElseThrow(() -> {
-            log.warn("Category not found with id: {}", id);
-            return new RuntimeException("Category not found with id: " + id);
-        });
+        Category category = findCategoryById(id);
         return categoryMapper.toDto(category);
     }
 
     public CategoryResponseDTO update(Long id, CategoryRequestDTO dto) {
         log.info("Updating category with id: {}", id);
 
-        Category category = categoryRepository.findById(id).orElseThrow(() -> {
-            log.warn("Category not found with id: {}", id);
-            return new RuntimeException("Category not found with id: " + id);
-        });
+        Category category = findCategoryById(id);
 
         category.setName(dto.getName());
         Category saved = categoryRepository.save(category);
@@ -64,11 +59,16 @@ public class CategoryService {
     public void delete(Long id) {
         log.info("Deleting category with id: {}", id);
 
-        if(!categoryRepository.existsById(id)) {
-            log.warn("Attempted to delete non existing category with id: {}", id);
-            throw new RuntimeException("Category not found with id: " + id);
-        }
-        categoryRepository.deleteById(id);
+        Category category = findCategoryById(id);
+        categoryRepository.delete(category);
+        log.debug("Deleted category with id: {}", id);
     }
-    
+
+    //Helper method
+    private Category findCategoryById(Long id) {
+    return categoryRepository.findById(id).orElseThrow(() -> {
+            log.warn("Category not found with id: {}", id);
+            return new ResourceNotFoundException("Category not found with id: " + id);
+        });
+    }
 }

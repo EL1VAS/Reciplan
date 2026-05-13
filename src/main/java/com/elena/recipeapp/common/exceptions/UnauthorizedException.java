@@ -1,4 +1,4 @@
-package com.elena.recipeapp.common.exeptions;
+package com.elena.recipeapp.common.exceptions;
 
 public class UnauthorizedException extends RuntimeException{
     public UnauthorizedException(String message) {
