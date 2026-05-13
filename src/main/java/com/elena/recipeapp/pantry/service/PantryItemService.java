@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.elena.recipeapp.common.exceptions.DuplicateResourceException;
+import com.elena.recipeapp.common.exceptions.ResourceNotFoundException;
 import com.elena.recipeapp.ingredient.model.Ingredient;
 import com.elena.recipeapp.ingredient.repository.IngredientRepository;
 import com.elena.recipeapp.pantry.dto.PantryItemPatchDTO;
@@ -34,7 +36,7 @@ public class PantryItemService {
         // Prevent adding the same ingredient twice
         if (pantryItemRepository.existsByUserIdAndIngredientId(userId, dto.getIngredientId())) {
             log.warn("Ingredient id: {} already in pantry for user id: {}", dto.getIngredientId(), userId);
-            throw new RuntimeException("Ingredient already exists in pantry");
+            throw new DuplicateResourceException("Ingredient already exists in pantry");
         }
 
         User user = findUserById(userId);
@@ -113,21 +115,21 @@ public class PantryItemService {
     private User findUserById(Long id) {
         return userRepository.findById(id).orElseThrow(() -> {
             log.warn("User not found with id: {}", id);
-            return new RuntimeException("User not found with id: " + id);
+            return new ResourceNotFoundException("User not found with id: " + id);
         });
     }
 
     private Ingredient findIngredientById(Long id) {
         return ingredientRepository.findById(id).orElseThrow(() -> {
             log.warn("Ingredient not found with id: {}", id);
-            return new RuntimeException("Ingredient not found with id: " + id);
+            return new ResourceNotFoundException("Ingredient not found with id: " + id);
         });
     }
 
     private PantryItem findItemByIdAndUserId(Long itemId, Long userId) {
         return pantryItemRepository.findByIdAndUserId(itemId, userId).orElseThrow(() -> {
             log.warn("Pantry item id: {} not found for user with id: {}", itemId, userId);
-            return new RuntimeException("Pantry item not found or does not belong to user");
+            return new ResourceNotFoundException("Pantry item not found or does not belong to user");
         });
     }
 }

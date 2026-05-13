@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import com.elena.recipeapp.common.exceptions.DuplicateResourceException;
+import com.elena.recipeapp.common.exceptions.ResourceNotFoundException;
 import com.elena.recipeapp.ingredient.model.Ingredient;
 import com.elena.recipeapp.ingredient.repository.IngredientRepository;
 import com.elena.recipeapp.shoppinglist.dto.ShoppingListItemPatchDTO;
@@ -34,7 +36,7 @@ public class ShoppingListItemService {
         // Prevent adding the same ingredient twice
         if (shoppingListItemRepository.existsByUserIdAndIngredientId(userId, dto.getIngredientId())) {
             log.warn("Ingredient id: {} already in pantry for user id: {}", dto.getIngredientId(), userId);
-            throw new RuntimeException("Ingredient already exists in pantry");
+            throw new DuplicateResourceException("Ingredient already exists in pantry");
         }
 
         User user = findUserById(userId);
@@ -140,21 +142,21 @@ public class ShoppingListItemService {
     private User findUserById(Long id) {
         return userRepository.findById(id).orElseThrow(() -> {
             log.warn("User not found with id: {}", id);
-            return new RuntimeException("User not found with id: " + id);
+            return new ResourceNotFoundException("User not found with id: " + id);
         });
     }
 
     private Ingredient findIngredientById(Long id) {
         return ingredientRepository.findById(id).orElseThrow(() -> {
             log.warn("Ingredient not found with id: {}", id);
-            return new RuntimeException("Ingredient not found with id: " + id);
+            return new ResourceNotFoundException("Ingredient not found with id: " + id);
         });
     }
 
     private ShoppingListItem findItemByIdAndUserId(Long itemId, Long userId) {
         return shoppingListItemRepository.findByIdAndUserId(itemId, userId).orElseThrow(() -> {
             log.warn("Shopping list item id: {} not found for user with id: {}", itemId, userId);
-            return new RuntimeException("Shopping list item not found or does not belong to user");
+            return new ResourceNotFoundException("Shopping list item not found or does not belong to user");
         });
     }
 }

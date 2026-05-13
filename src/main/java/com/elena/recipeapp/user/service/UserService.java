@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.elena.recipeapp.common.exceptions.ResourceNotFoundException;
 import com.elena.recipeapp.user.dto.ChangePasswordRequestDTO;
 import com.elena.recipeapp.user.dto.UserPatchDTO;
 import com.elena.recipeapp.user.dto.UserResponseDTO;
@@ -69,11 +70,12 @@ public class UserService {
         log.debug("User deleted with id: {}", id);
     }
 
+    //Helper method
     private User findUserById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> {
                     log.warn("User not found with id: {}", id);
-                    return new RuntimeException("User not found with id: " + id);
+                    return new ResourceNotFoundException("User not found with id: " + id);
                 });
     }
     
