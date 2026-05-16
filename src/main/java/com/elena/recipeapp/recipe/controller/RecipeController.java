@@ -74,9 +74,5 @@ public class RecipeController {
     public ResponseEntity<Void> delete(@PathVariable Long userId, @PathVariable Long id) {
         recipeService.delete(userId, id);
         return ResponseEntity.noContent().build();
-    }
-
-
-
-    
+    }  
 }
