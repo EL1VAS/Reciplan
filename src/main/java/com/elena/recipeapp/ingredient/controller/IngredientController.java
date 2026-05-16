@@ -22,7 +22,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping
+@RequestMapping("/api/ingredients")
 @RequiredArgsConstructor
 @Tag(name = "Ingredients", description = "Ingredient management endpoints")
 public class IngredientController {

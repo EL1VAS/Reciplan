@@ -21,7 +21,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping
+@RequestMapping("/api/categories")
 @RequiredArgsConstructor
 @Tag(name = "Categories", description = "Category management endpoints")
 public class CategoryController {
