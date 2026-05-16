@@ -15,7 +15,7 @@ import lombok.Setter;
 @Builder
 public class CategoryRequestDTO {
 
-    @NotBlank
-    @Size(min = 3, max = 50)
+    @NotBlank (message = "Category name can't be blank")
+    @Size(min = 3, max = 50, message = "Category name needs to be min 3 and max 50 characters")
     private String name;    
 }

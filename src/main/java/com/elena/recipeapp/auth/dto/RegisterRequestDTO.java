@@ -16,15 +16,15 @@ import lombok.Setter;
 @Builder
 public class RegisterRequestDTO {
     
-    @NotBlank
-    @Size(min = 3, max = 50)
+    @NotBlank (message = "Username can't be blank")
+    @Size(min = 3, max = 50, message = "Please enter a username with min 3 and max 50 characters")
     private String username;
 
-    @NotBlank
-    @Email
+    @NotBlank (message = "Email can't be blank")
+    @Email (message = "Please enter a valid email")
     private String email;
 
-    @NotBlank
-    @Size(min = 8)
+    @NotBlank (message = "Password can't be blank")
+    @Size(min = 8, message = "Please enter a password with min 8 characters")
     private String password;
 }

@@ -16,9 +16,9 @@ import lombok.Setter;
 public class UserPatchDTO {
 
     //Not added @NotBlank in case they want a partial update of either username or email
-    @Size(min = 3, max = 50)
+    @Size(min = 3, max = 50, message = "Username must be min 3 and max 50 characters")
     private String username;
 
-    @Email
+    @Email (message = "Please enter a valid email")
     private String email;
 }

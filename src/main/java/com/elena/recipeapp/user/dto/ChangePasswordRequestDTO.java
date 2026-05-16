@@ -15,10 +15,10 @@ import lombok.Setter;
 @Builder
 public class ChangePasswordRequestDTO {
     
-    @NotBlank
+    @NotBlank (message = "Current password can't be blank")
     private String currentPassword;
 
-    @NotBlank
-    @Size(min = 8)
+    @NotBlank (message = "New password can't be blank")
+    @Size(min = 8, message = "Please enter a valid new password with min 8 characters")
     private String newPassword;
 }

@@ -2,7 +2,6 @@ package com.elena.recipeapp.shoppinglist.service;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;

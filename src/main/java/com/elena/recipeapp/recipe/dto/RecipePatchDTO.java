@@ -19,15 +19,15 @@ import lombok.Setter;
 @Builder
 public class RecipePatchDTO {
 
-    @Size(max = 50)
+    @Size(max = 50, message = "Title must be less than 50 characters")
     private String title;
 
     private String instructions;
 
-    @Min(1)
+    @Min(1, message = "PrepTimeMinutes value must be min 1")
     private Integer prepTimeMinutes;
 
-    @Min(1)
+    @Min(1, message = "CookTimeMinutes value must be min 1")
     private Integer cookTimeMinutes;
 
     private Difficulty difficulty;

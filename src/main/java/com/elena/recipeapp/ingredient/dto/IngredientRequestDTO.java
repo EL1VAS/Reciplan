@@ -15,10 +15,10 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class IngredientRequestDTO {
-    @NotBlank
-    @Size(min = 2, max = 50)
+    @NotBlank (message = "Ingredient name can't be blank")
+    @Size(min = 2, max = 50, message = "Ingredient name must be min 2 and max 50 characters") 
     private String name;
 
-    @NotNull
+    @NotNull (message = "Category id can't be blank")
     private Long categoryId;
 }

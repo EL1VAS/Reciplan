@@ -16,7 +16,7 @@ public class ShoppingListItemPatchDTO {
 
     private Long ingredientId;
 
-    @Positive
+    @Positive (message = "Quantity value must be positive")
     private Double quantity;
 
     private String unit;

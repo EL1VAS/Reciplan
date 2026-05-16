@@ -22,25 +22,25 @@ import lombok.Setter;
 @Builder
 public class RecipeRequestDTO {
 
-    @NotBlank
-    @Size(max = 50)
+    @NotBlank (message = "Title can't be blank")
+    @Size(max = 50, message = "Title must be max 50 characters")
     private String title;
 
     private String instructions;
 
-    @Min(1)
+    @Min(1, message = "PrepTimeMinutes value must be min 1")
     private Integer prepTimeMinutes;
 
-    @Min(1)
+    @Min(1, "CookTimeMinutes value must be min 1")
     private Integer cookTimeMinutes;
 
-    @NotNull
+    @NotNull (message = "Difficulty can't be null")
     private Difficulty difficulty;
 
     private boolean vegetarian;
     private boolean lactoseFree;
     private boolean glutenFree;
 
-    @NotEmpty
+    @NotEmpty (message = "RecipeIngredients list can't be empty")
     private List<RecipeIngredientRequestDTO> recipeIngredients;
 }
