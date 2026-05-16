@@ -1,19 +1,28 @@
 package com.elena.recipeapp.recipe.service;
 
+import java.rmi.server.LogStream;
+import java.util.Comparator;
 import java.util.List;
-
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.elena.recipeapp.common.exceptions.ResourceNotFoundException;
 import com.elena.recipeapp.common.exceptions.UnauthorizedException;
+import com.elena.recipeapp.common.util.PantryMatcherUtil;
 import com.elena.recipeapp.enums.Difficulty;
+import com.elena.recipeapp.enums.MatchStatus;
 import com.elena.recipeapp.ingredient.model.Ingredient;
 import com.elena.recipeapp.ingredient.repository.IngredientRepository;
+import com.elena.recipeapp.pantry.repository.PantryItemRepository;
 import com.elena.recipeapp.recipe.dto.RecipeIngredientRequestDTO;
+import com.elena.recipeapp.recipe.dto.RecipeMatchResponseDTO;
 import com.elena.recipeapp.recipe.dto.RecipePatchDTO;
 import com.elena.recipeapp.recipe.dto.RecipeRequestDTO;
 import com.elena.recipeapp.recipe.dto.RecipeResponseDTO;
@@ -37,6 +46,7 @@ public class RecipeService {
     private final RecipeMapper recipeMapper;
     private final IngredientRepository ingredientRepository;
     private final UserRepository userRepository;
+    private final PantryItemRepository pantryItemRepository;
 
     public RecipeResponseDTO create(Long userId, RecipeRequestDTO dto) {
         log.info("Creating recipe: {} by user id: {}", dto.getTitle(), userId);
@@ -111,13 +121,30 @@ public class RecipeService {
     }
 
     public void delete(Long userId, Long id) {
+        log.info("Deleting recipe id: {}", id);
         findRecipeById(id);
         checkOwnership(userId, id);
         recipeRepository.deleteById(id);
         log.debug("Deleted recipe with id: {} created by user id: {}", id, userId);
     }
 
+    @Transactional
+    public List<RecipeMatchResponseDTO> getMatchesForUser(Long userId) {
+        log.info("Fetching recipe matches for user id: {}", userId);
+        //Get pantry ingredient ids
+        Set<Long> pantryIds = pantryItemRepository.findByUserId(userId)
+                .stream()
+                .map(item -> item.getIngredient().getId())
+                .collect(Collectors.toSet());
 
+        //Score each recipe
+        return recipeRepository.findAll()
+                .stream()
+                .map(recipe -> scoreRecipe(recipe, pantryIds))
+                .filter(match -> match.getMatchStatus() != MatchStatus.NO_MATCH)
+                .sorted(Comparator.comparing(match -> match.getMatchStatus().ordinal()))
+                .toList();
+    } 
 
 
 
@@ -156,5 +183,24 @@ public class RecipeService {
                                     .unit(dto.getUnit())
                                     .build();
             }).toList();        
-        }   
+    }  
+
+    private RecipeMatchResponseDTO scoreRecipe(Recipe recipe, Set<Long> pantryIds) {
+
+        List<Long> recipeIngredientIds = recipe.getRecipeIngredients()
+                    .stream()
+                    .map(ri -> ri.getIngredient().getId())
+                    .toList();
+
+        MatchStatus status = PantryMatcherUtil.calculateMatchStatus(pantryIds, recipeIngredientIds);
+
+        List<Long> missingIds = PantryMatcherUtil.getMissingIngredientIds(pantryIds, recipeIngredientIds);
+
+        return RecipeMatchResponseDTO.builder()
+                    .recipe(recipeMapper.toDto(recipe))
+                    .matchStatus(status)
+                    .missingIngredientIds(missingIds)
+                    .build();
+    }
+
 }
