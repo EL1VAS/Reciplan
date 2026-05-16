@@ -1,13 +1,21 @@
 package com.elena.recipeapp.shoppinglist.service;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.elena.recipeapp.common.exceptions.DuplicateResourceException;
 import com.elena.recipeapp.common.exceptions.ResourceNotFoundException;
 import com.elena.recipeapp.ingredient.model.Ingredient;
 import com.elena.recipeapp.ingredient.repository.IngredientRepository;
+import com.elena.recipeapp.pantry.repository.PantryItemRepository;
+import com.elena.recipeapp.recipe.model.Recipe;
+import com.elena.recipeapp.recipe.model.RecipeIngredients;
+import com.elena.recipeapp.recipe.repository.RecipeRepository;
 import com.elena.recipeapp.shoppinglist.dto.ShoppingListItemPatchDTO;
 import com.elena.recipeapp.shoppinglist.dto.ShoppingListItemRequestDTO;
 import com.elena.recipeapp.shoppinglist.dto.ShoppingListItemResponseDTO;
@@ -29,6 +37,8 @@ public class ShoppingListItemService {
     private final ShoppingListItemMapper shoppingListItemMapper;
     private final IngredientRepository ingredientRepository;
     private final UserRepository userRepository;
+    private final PantryItemRepository pantryItemRepository;
+    private final RecipeRepository recipeRepository;
 
     public ShoppingListItemResponseDTO add(Long userId, ShoppingListItemRequestDTO dto) {
         log.info("Adding item for user with id: {}", userId);
@@ -121,6 +131,48 @@ public class ShoppingListItemService {
         shoppingListItemRepository.deleteAll(checkedItems);
 
         log.debug("Cleared {} checked items for user id: {}", checkedItems.size(), userId);
+    }
+
+    @Transactional
+    public void addMissingIngredientsFromRecipe(Long userId, Long recipeId) {
+        log.info("Adding missing ingredients from recipe id: {} to shopping list for user id: {}", recipeId, userId);
+
+        //Get user's pantry ids
+        Set<Long> pantryIds = pantryItemRepository.findByUserId(userId)
+                    .stream()
+                    .map(item -> item.getIngredient().getId())
+                    .collect(Collectors.toSet());
+
+        //Get recipe ingredients
+        Recipe recipe = recipeRepository.findById(recipeId).orElseThrow(() -> {
+            log.warn("Recipe not found with id: {}", recipeId);
+            return new ResourceNotFoundException("Recipe not found with id: " + recipeId);
+        });
+
+        //Find missing ingredients and add to shopping list
+        for (RecipeIngredients ri : recipe.getRecipeIngredients()) {
+            Long ingredientId = ri.getIngredient().getId();
+
+            if(!pantryIds.contains(ingredientId)) {
+                //Skip if ingredient is already on the shopping list
+                if(shoppingListItemRepository.existsByUserIdAndIngredientId(userId, ingredientId)) {
+                    log.debug("Ingredient id: {} already in shopping list, skipping", ingredientId);
+                    continue;
+                }
+
+                User user = findUserById(userId);
+
+                ShoppingListItem item = ShoppingListItem.builder()
+                        .user(user)
+                        .ingredient(ri.getIngredient())
+                        .checked(false)
+                        .build();
+
+                shoppingListItemRepository.save(item);
+                log.debug("Added ingredient id: {} to shopping list for user id: {}", ingredientId, userId);
+            }
+        }
+        log.debug("Finished adding missing ingredients from recipe id: {}", recipeId);
     }
 
     // Convenience method — just toggle checked without sending full patch
