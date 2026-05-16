@@ -35,8 +35,8 @@ public class ShoppingListItemService {
 
         // Prevent adding the same ingredient twice
         if (shoppingListItemRepository.existsByUserIdAndIngredientId(userId, dto.getIngredientId())) {
-            log.warn("Ingredient id: {} already in pantry for user id: {}", dto.getIngredientId(), userId);
-            throw new DuplicateResourceException("Ingredient already exists in pantry");
+            log.warn("Ingredient id: {} already in shopping list for user id: {}", dto.getIngredientId(), userId);
+            throw new DuplicateResourceException("Ingredient already exists in shopping list");
         }
 
         User user = findUserById(userId);
