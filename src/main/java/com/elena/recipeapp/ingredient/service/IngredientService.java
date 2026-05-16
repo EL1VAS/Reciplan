@@ -63,7 +63,7 @@ public class IngredientService {
         ingredient.setCategory(category);
 
         Ingredient saved = ingredientRepository.save(ingredient);
-        log.debug("Ingredient updated: ", saved.getName());
+        log.debug("Ingredient updated: {}", saved.getName());
 
         return ingredientMapper.toDto(saved);
     }
