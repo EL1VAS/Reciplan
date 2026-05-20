@@ -36,8 +36,8 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 //public endpoints - no token needed
-                .requestMatchers("/api/auth**").permitAll()
-                .requestMatchers("swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 //admin endpoints
                 .requestMatchers("/api/users").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/categories").hasRole("ADMIN")
