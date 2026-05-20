@@ -49,13 +49,13 @@ public class IngredientController {
         return ResponseEntity.ok(ingredientService.getById(id));
     }
 
-    @PutMapping
+    @PutMapping("/{id}")
     @Operation(summary = "Update an ingredient by id")
     public ResponseEntity<IngredientResponseDTO> update(@PathVariable Long id, @Valid @RequestBody IngredientRequestDTO dto) {
         return ResponseEntity.ok(ingredientService.update(id, dto));
     }
 
-    @DeleteMapping
+    @DeleteMapping("/{id}")
     @Operation(summary = "Delete ingredient by id") 
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         ingredientService.delete(id);

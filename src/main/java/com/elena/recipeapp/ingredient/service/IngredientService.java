@@ -2,7 +2,9 @@ package com.elena.recipeapp.ingredient.service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.elena.recipeapp.category.repository.CategoryRepository;
 import com.elena.recipeapp.category.model.Category;
@@ -11,6 +13,8 @@ import com.elena.recipeapp.ingredient.dto.IngredientResponseDTO;
 import com.elena.recipeapp.ingredient.mapper.IngredientMapper;
 import com.elena.recipeapp.ingredient.model.Ingredient;
 import com.elena.recipeapp.ingredient.repository.IngredientRepository;
+
+
 import com.elena.recipeapp.common.exceptions.ResourceNotFoundException;
 
 import lombok.RequiredArgsConstructor;
@@ -19,12 +23,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class IngredientService {
 
     private final IngredientMapper ingredientMapper;
     private final IngredientRepository ingredientRepository;
     private final CategoryRepository categoryRepository;
 
+    @Transactional
     public IngredientResponseDTO create(IngredientRequestDTO dto) {
         log.info("Creating ingredient with name: {}", dto.getName());
 
@@ -42,7 +48,7 @@ public class IngredientService {
     public List<IngredientResponseDTO> getAll() {
         log.info("Fetching all ingredients");
         
-        return ingredientRepository.findAll().stream().map(ingredientMapper :: toDto).toList();
+        return ingredientRepository.findAll(Pageable.unpaged()).getContent().stream().map(ingredientMapper :: toDto).toList();
     }
     
     public IngredientResponseDTO getById(Long id) {
@@ -52,6 +58,7 @@ public class IngredientService {
         return ingredientMapper.toDto(ingredient);
     }
 
+    @Transactional
     public IngredientResponseDTO update(Long id, IngredientRequestDTO dto) {
         log.info("Updating ingredient with id: {}", id);
 
@@ -68,6 +75,7 @@ public class IngredientService {
         return ingredientMapper.toDto(saved);
     }
 
+    @Transactional
     public void delete(Long id) {
         log.info("Deleting ingredient with id: {}", id);
         Ingredient ingredient = findIngredientById(id);
