@@ -1,5 +1,6 @@
 package com.elena.recipeapp.auth.dto;
 
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,8 +14,10 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class LoginRequestDTO {
-    @NotBlank (message = "Username can't be blanc")
-    private String username;
+
+    @NotBlank(message = "Email can't be blank")
+    @Email(message = "Please enter a valid email")
+    private String email;
 
     @NotBlank (message = "Enter a valid password")
     private String password;
