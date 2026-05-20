@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 
 import com.elena.recipeapp.common.exceptions.InvalidPasswordException;
 import com.elena.recipeapp.common.exceptions.ResourceNotFoundException;
+import com.elena.recipeapp.common.exceptions.UnauthorizedException;
+import com.elena.recipeapp.enums.Roles;
 import com.elena.recipeapp.user.dto.ChangePasswordRequestDTO;
 import com.elena.recipeapp.user.dto.UserPatchDTO;
 import com.elena.recipeapp.user.dto.UserResponseDTO;
@@ -63,13 +65,18 @@ public class UserService {
         log.debug("Password changed for user with id: {}", id);
     }
 
-    public void delete(Long id){
-        log.info("Deleting user with id: {}", id);
+    public void delete(Long requestingUserId, Long targetId) {
+        
+        User requesting = findUserById(requestingUserId);
 
-        User user = findUserById(id);
+        // allow if deleting own account OR if admin
+        if (!requestingUserId.equals(targetId) && !requesting.getRole().equals(Roles.ADMIN)) {
+            throw new UnauthorizedException("You can only delete your own account");
+        }
+
+        User user = findUserById(targetId);
         userRepository.delete(user);
-        log.debug("User deleted with id: {}", id);
-    }
+}
 
     //Helper method
     private User findUserById(Long id) {
