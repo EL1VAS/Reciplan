@@ -3,6 +3,7 @@ package com.elena.recipeapp.user.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.elena.recipeapp.user.dto.ChangePasswordRequestDTO;
 import com.elena.recipeapp.user.dto.UserPatchDTO;
 import com.elena.recipeapp.user.dto.UserResponseDTO;
+import com.elena.recipeapp.user.model.User;
 import com.elena.recipeapp.user.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -57,8 +59,10 @@ public class UserController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete user by id")
-    public ResponseEntity<Void> delete(@PathVariable Log id) {
-        userService.delete(id);
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+
+        User requestingUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        userService.delete(requestingUser.getId(), id);
         return ResponseEntity.noContent().build();
     }
 
