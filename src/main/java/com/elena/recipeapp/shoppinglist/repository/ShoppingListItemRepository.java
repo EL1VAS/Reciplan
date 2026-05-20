@@ -3,6 +3,9 @@ package com.elena.recipeapp.shoppinglist.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -11,7 +14,8 @@ import com.elena.recipeapp.shoppinglist.model.ShoppingListItem;
 @Repository
 public interface ShoppingListItemRepository extends JpaRepository<ShoppingListItem, Long> {
     //The whole shopping list
-    List<ShoppingListItem> findByUserId(Long userId);
+    @EntityGraph(attributePaths = {"ingredient", "ingredient.category", "user"})
+    Page<ShoppingListItem> findByUserId(Long userId, Pageable pageable);
 
     // Ownership check for patch/delete
     Optional<ShoppingListItem> findByIdAndUserId(Long id, Long userId);

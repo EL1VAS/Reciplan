@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class RecipeService {
     
     private final RecipeRepository recipeRepository;
@@ -48,6 +48,7 @@ public class RecipeService {
     private final UserRepository userRepository;
     private final PantryItemRepository pantryItemRepository;
 
+    @Transactional
     public RecipeResponseDTO create(Long userId, RecipeRequestDTO dto) {
         log.info("Creating recipe: {} by user id: {}", dto.getTitle(), userId);
 
@@ -98,6 +99,7 @@ public class RecipeService {
         return recipeRepository.findByRecipeIngredientsIngredientId(ingredientId, pageable).map(recipeMapper :: toDto);
     }
  
+    @Transactional
     public RecipeResponseDTO patch(Long userId, Long id, RecipePatchDTO dto) {
         log.info("Updating recipe with id: {}", id);
         Recipe recipe = findRecipeById(id);
@@ -120,6 +122,7 @@ public class RecipeService {
         return recipeMapper.toDto(saved);
     }
 
+    @Transactional
     public void delete(Long userId, Long id) {
         log.info("Deleting recipe id: {}", id);
         findRecipeById(id);
@@ -128,7 +131,7 @@ public class RecipeService {
         log.debug("Deleted recipe with id: {} created by user id: {}", id, userId);
     }
 
-    @Transactional
+    
     public List<RecipeMatchResponseDTO> getMatchesForUser(Long userId) {
         log.info("Fetching recipe matches for user id: {}", userId);
         //Get pantry ingredient ids

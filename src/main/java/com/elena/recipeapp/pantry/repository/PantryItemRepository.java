@@ -3,17 +3,20 @@ package com.elena.recipeapp.pantry.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import com.elena.recipeapp.pantry.model.PantryItem;
 
-
 @Repository
 public interface PantryItemRepository extends JpaRepository<PantryItem, Long> {
     
     //All ingredients that user has already
-    List<PantryItem> findByUserId(Long userId);
+    @EntityGraph(attributePaths = {"ingredient", "ingredient.category", "user"})
+    Page<PantryItem> findByUserId(Long userId, Pageable pageable);
 
     Optional<PantryItem> findByIdAndUserId(Long id, Long userId);
 
