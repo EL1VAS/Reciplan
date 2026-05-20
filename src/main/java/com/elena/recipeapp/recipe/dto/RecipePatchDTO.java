@@ -24,10 +24,10 @@ public class RecipePatchDTO {
 
     private String instructions;
 
-    @Min(1, message = "PrepTimeMinutes value must be min 1")
+    @Min(value = 1, message = "PrepTimeMinutes value must be min 1")
     private Integer prepTimeMinutes;
 
-    @Min(1, message = "CookTimeMinutes value must be min 1")
+    @Min(value = 1, message = "CookTimeMinutes value must be min 1")
     private Integer cookTimeMinutes;
 
     private Difficulty difficulty;
