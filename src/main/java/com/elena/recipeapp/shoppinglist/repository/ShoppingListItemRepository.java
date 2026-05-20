@@ -24,7 +24,7 @@ public interface ShoppingListItemRepository extends JpaRepository<ShoppingListIt
     List<ShoppingListItem> findByUserIdAndChecked(Long userId, boolean checked);
 
     //Shopping list by category of ingredients for easier shopping
-    List<ShoppingListItem> findByUserIdOrderByIngredientCategoryNameAsc(Long userId);
+    Page<ShoppingListItem> findByUserIdOrderByIngredientCategoryNameAsc(Long userId);
 
     //Delete the full list
     void deleteByUserId(Long userId);

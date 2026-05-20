@@ -24,7 +24,7 @@ public interface PantryItemRepository extends JpaRepository<PantryItem, Long> {
     Optional<PantryItem> findByUserIdAndIngredientId(Long userId, Long ingredientId);
 
     //All the user's ingredients ordered by category's name
-    List<PantryItem> findByUserIdOrderByIngredientCategoryNameAsc(Long userId);
+    Page<PantryItem> findByUserIdOrderByIngredientCategoryNameAsc(Long userId, Pageable pageable);
 
     //All the ingredients of one category in the user's pantry i.e. all dairy products
     List<PantryItem> findByUserIdAndIngredientCategoryId(Long userId, Long categoryId);

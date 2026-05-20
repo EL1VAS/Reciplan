@@ -2,7 +2,9 @@ package com.elena.recipeapp.pantry.service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.elena.recipeapp.common.exceptions.DuplicateResourceException;
 import com.elena.recipeapp.common.exceptions.ResourceNotFoundException;
@@ -17,12 +19,14 @@ import com.elena.recipeapp.pantry.repository.PantryItemRepository;
 import com.elena.recipeapp.user.model.User;
 import com.elena.recipeapp.user.repository.UserRepository;
 
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class PantryItemService {
     
     private final PantryItemRepository pantryItemRepository;
@@ -30,6 +34,7 @@ public class PantryItemService {
     private final IngredientRepository ingredientRepository;
     private final UserRepository userRepository;
 
+    @Transactional
     public PantryItemResponseDTO add(Long userId, PantryItemRequestDTO dto) {
         log.info("Adding item for user with id: {}", userId);
 
@@ -55,7 +60,8 @@ public class PantryItemService {
     public List<PantryItemResponseDTO> getAllForUser(Long userId) {
         log.info("Fetching all pantry items for user id: {}", userId);
 
-        return  pantryItemRepository.findByUserId(userId)
+        return  pantryItemRepository.findByUserId(userId, Pageable.unpaged())
+                                    .getContent()
                                     .stream()
                                     .map(pantryItemMapper :: toDto)
                                     .toList();
@@ -65,7 +71,8 @@ public class PantryItemService {
     public List<PantryItemResponseDTO> getAllForUserSortedByCategory(Long userId) {
         log.info("Fetching all pantry items sorted by category for user id: {}", userId);
 
-        return  pantryItemRepository.findByUserIdOrderByIngredientCategoryNameAsc(userId)
+        return  pantryItemRepository.findByUserIdOrderByIngredientCategoryNameAsc(userId, Pageable.unpaged())
+                                    .getContent()
                                     .stream()
                                     .map(pantryItemMapper :: toDto)
                                     .toList();
@@ -101,6 +108,7 @@ public class PantryItemService {
         return pantryItemMapper.toDto(saved);
     }
 
+    @Transactional
     public void delete(Long userId, Long id) {
         log.info("Deleting pantry item with id: {}", id);
 

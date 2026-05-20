@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ShoppingListItemService {
     
     private final ShoppingListItemRepository shoppingListItemRepository;
@@ -39,6 +42,7 @@ public class ShoppingListItemService {
     private final PantryItemRepository pantryItemRepository;
     private final RecipeRepository recipeRepository;
 
+    @Transactional
     public ShoppingListItemResponseDTO add(Long userId, ShoppingListItemRequestDTO dto) {
         log.info("Adding item for user with id: {}", userId);
 
@@ -60,16 +64,17 @@ public class ShoppingListItemService {
         return shoppingListItemMapper.toDto(saved);
     }
 
-    public List<ShoppingListItemResponseDTO> getAllForUser(Long userId) {
+    public Page<ShoppingListItemResponseDTO> getAllForUser(Long userId) {
         log.info("Fetching all shopping list items for user id: {}", userId);
 
-        return  shoppingListItemRepository.findByUserId(userId)
+        return  shoppingListItemRepository.findByUserId(userId, Pageable.unpaged())
+                                    .getContent()
                                     .stream()
                                     .map(shoppingListItemMapper :: toDto)
                                     .toList();
     }
 
-    public List<ShoppingListItemResponseDTO> getAllForUserSortedByCategory(Long userId) {
+    public Page<ShoppingListItemResponseDTO> getAllForUserSortedByCategory(Long userId) {
         log.info("Fetching all shopping list items sorted by category for user id: {}", userId);
 
         return  shoppingListItemRepository.findByUserIdOrderByIngredientCategoryNameAsc(userId)
@@ -87,6 +92,8 @@ public class ShoppingListItemService {
                                     .toList();
     }
 
+    
+    @Transactional
     public ShoppingListItemResponseDTO patch(Long userId, Long id, ShoppingListItemPatchDTO dto) {
         log.info("Updating pantry item id: {} for user id: {}", id, userId);
 
@@ -107,6 +114,7 @@ public class ShoppingListItemService {
         return shoppingListItemMapper.toDto(saved);
     }
 
+    @Transactional
     public void delete(Long userId, Long id) {
         log.info("Deleting shopping list item id: {} of user id: {}", id, userId);
 
@@ -116,6 +124,7 @@ public class ShoppingListItemService {
         log.debug("Deleted shopping list item id: {}", id);
     }
 
+    @Transactional
     public void clearAll(Long userId) {
         log.info("Deleting shopping list of user id: {}", userId);
 
@@ -123,6 +132,7 @@ public class ShoppingListItemService {
         log.debug("Shopping list deleted");
     }
 
+    @Transactional
     public void clearChecked(Long userId) {
         log.info("Clearing checked items for user id: {}", userId);
         
@@ -137,7 +147,8 @@ public class ShoppingListItemService {
         log.info("Adding missing ingredients from recipe id: {} to shopping list for user id: {}", recipeId, userId);
 
         //Get user's pantry ids
-        Set<Long> pantryIds = pantryItemRepository.findByUserId(userId)
+        Set<Long> pantryIds = pantryItemRepository.findByUserId(userId, Pageable.unpaged())
+                    .getContent()
                     .stream()
                     .map(item -> item.getIngredient().getId())
                     .collect(Collectors.toSet());

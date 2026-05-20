@@ -2,8 +2,11 @@ package com.elena.recipeapp.user.service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.elena.recipeapp.common.exceptions.InvalidPasswordException;
 import com.elena.recipeapp.common.exceptions.ResourceNotFoundException;
@@ -22,15 +25,16 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
 
-    public List<UserResponseDTO> getAll() {
+    public Page<UserResponseDTO> getAll(Pageable pageable) {
         log.info("Fetching all users");
-        return userRepository.findAll().stream().map(userMapper :: toDto).toList();
+        return userRepository.findAll(pageable).map(userMapper :: toDto);
     }
 
     public UserResponseDTO getById(Long id) {
@@ -40,6 +44,7 @@ public class UserService {
         return userMapper.toDto(user);
     }
 
+    @Transactional
     public UserResponseDTO patch(Long id, UserPatchDTO dto) {
         log.info("Updating user with id: {}", id);
 
@@ -50,6 +55,7 @@ public class UserService {
         return userMapper.toDto(saved);
     }
 
+    @Transactional
     public void changePassword(Long id, ChangePasswordRequestDTO dto) {
         log.info("Changing password for user with id: {}", id);
 
@@ -65,6 +71,7 @@ public class UserService {
         log.debug("Password changed for user with id: {}", id);
     }
 
+    @Transactional
     public void delete(Long requestingUserId, Long targetId) {
         
         User requesting = findUserById(requestingUserId);

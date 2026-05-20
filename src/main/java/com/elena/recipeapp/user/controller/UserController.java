@@ -2,6 +2,8 @@ package com.elena.recipeapp.user.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -36,8 +38,8 @@ public class UserController {
 
     @GetMapping
     @Operation(summary = "Get list of all users")
-    public ResponseEntity<List<UserResponseDTO>> getAll() {
-        return ResponseEntity.ok(userService.getAll());
+    public ResponseEntity<Page<UserResponseDTO>> getAll() {
+        return ResponseEntity.ok(userService.getAll(Pageable.unpaged()));
     }
     
     @GetMapping("/{id}")

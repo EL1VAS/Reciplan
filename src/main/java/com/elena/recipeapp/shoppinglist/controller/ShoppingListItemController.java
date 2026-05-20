@@ -2,6 +2,8 @@ package com.elena.recipeapp.shoppinglist.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,14 +42,14 @@ public class ShoppingListItemController {
 
     @GetMapping
     @Operation(summary = "Get all items in shopping list for user")
-    public ResponseEntity<List<ShoppingListItemResponseDTO>> getAllForUser(@PathVariable Long userId) {
-        return ResponseEntity.ok(shoppingListItemService.getAllForUser(userId));
+    public ResponseEntity<Page<ShoppingListItemResponseDTO>> getAllForUser(@PathVariable Long userId) {
+        return ResponseEntity.ok(shoppingListItemService.getAllForUser(userId, Pageable.unpaged()).getContent());
     }
 
     @GetMapping("/sorted-by-category")
     @Operation(summary = "Get all items in shopping list sorted by category")
-    public ResponseEntity<List<ShoppingListItemResponseDTO>> getAllForUserSortedByCategory(@PathVariable Long userId) {
-        return ResponseEntity.ok(shoppingListItemService.getAllForUserSortedByCategory(userId));
+    public ResponseEntity<Page<ShoppingListItemResponseDTO>> getAllForUserSortedByCategory(@PathVariable Long userId) {
+        return ResponseEntity.ok(shoppingListItemService.getAllForUserSortedByCategory(userId, Pageable.unpaged()).getContent());
     }
 
     @GetMapping("/unchecked")

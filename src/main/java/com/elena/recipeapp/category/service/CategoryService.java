@@ -3,6 +3,7 @@ package com.elena.recipeapp.category.service;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.elena.recipeapp.category.dto.CategoryRequestDTO;
 import com.elena.recipeapp.category.dto.CategoryResponseDTO;
@@ -11,17 +12,20 @@ import com.elena.recipeapp.category.model.Category;
 import com.elena.recipeapp.category.repository.CategoryRepository;
 import com.elena.recipeapp.common.exceptions.ResourceNotFoundException;
 
+import jakarta.persistence.Table;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CategoryService {
 
     private final CategoryMapper categoryMapper;
     private final CategoryRepository categoryRepository;
 
+    @Transactional
     public CategoryResponseDTO create(CategoryRequestDTO dto) {
         log.info("Creating category with name: {}", dto.getName()); // info for important operations
 
@@ -44,6 +48,7 @@ public class CategoryService {
         return categoryMapper.toDto(category);
     }
 
+    @Transactional
     public CategoryResponseDTO update(Long id, CategoryRequestDTO dto) {
         log.info("Updating category with id: {}", id);
 
@@ -56,6 +61,7 @@ public class CategoryService {
         return categoryMapper.toDto(saved);
     }
 
+    @Transactional
     public void delete(Long id) {
         log.info("Deleting category with id: {}", id);
 

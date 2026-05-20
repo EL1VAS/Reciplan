@@ -3,7 +3,6 @@ package com.elena.recipeapp.recipe.repository;
 
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;

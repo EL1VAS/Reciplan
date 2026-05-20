@@ -132,21 +132,23 @@ public class RecipeService {
     }
 
     
-    public List<RecipeMatchResponseDTO> getMatchesForUser(Long userId) {
+    public Page<RecipeMatchResponseDTO> getMatchesForUser(Long userId, Pageable pageable) {
         log.info("Fetching recipe matches for user id: {}", userId);
         //Get pantry ingredient ids
-        Set<Long> pantryIds = pantryItemRepository.findByUserId(userId)
+        Set<Long> pantryIds = pantryItemRepository.findByUserId(userId, Pageable.unpaged())
+                .getContent()
                 .stream()
                 .map(item -> item.getIngredient().getId())
                 .collect(Collectors.toSet());
 
         //Score each recipe
-        return recipeRepository.findAll()
+        return recipeRepository.findAll(pageable)
+                .getContent()
                 .stream()
                 .map(recipe -> scoreRecipe(recipe, pantryIds))
                 .filter(match -> match.getMatchStatus() != MatchStatus.NO_MATCH)
                 .sorted(Comparator.comparing(match -> match.getMatchStatus().ordinal()))
-                .toList();
+                .
     } 
 
 
