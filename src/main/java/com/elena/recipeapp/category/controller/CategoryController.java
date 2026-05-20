@@ -17,10 +17,12 @@ import com.elena.recipeapp.category.dto.CategoryResponseDTO;
 import com.elena.recipeapp.category.service.CategoryService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/categories")
 @RequiredArgsConstructor

@@ -12,10 +12,12 @@ import com.elena.recipeapp.auth.dto.LoginRequestDTO;
 import com.elena.recipeapp.auth.dto.RegisterRequestDTO;
 import com.elena.recipeapp.auth.service.AuthService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@SecurityRequirement(name = "bearerAuth")
 @Slf4j
 @RestController
 @RequestMapping("/api/auth")

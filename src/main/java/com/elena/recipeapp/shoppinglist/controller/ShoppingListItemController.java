@@ -18,10 +18,12 @@ import com.elena.recipeapp.shoppinglist.dto.ShoppingListItemResponseDTO;
 import com.elena.recipeapp.shoppinglist.service.ShoppingListItemService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/users/{userId}/shopping-list")
 @RequiredArgsConstructor

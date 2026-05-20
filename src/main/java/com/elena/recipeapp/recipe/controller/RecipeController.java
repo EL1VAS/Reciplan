@@ -20,10 +20,12 @@ import com.elena.recipeapp.recipe.dto.RecipeResponseDTO;
 import com.elena.recipeapp.recipe.service.RecipeService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/recipes")
 @RequiredArgsConstructor
