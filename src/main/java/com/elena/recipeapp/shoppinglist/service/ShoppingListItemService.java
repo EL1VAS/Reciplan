@@ -2,7 +2,6 @@ package com.elena.recipeapp.shoppinglist.service;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -64,23 +63,18 @@ public class ShoppingListItemService {
         return shoppingListItemMapper.toDto(saved);
     }
 
-    public Page<ShoppingListItemResponseDTO> getAllForUser(Long userId) {
+    public Page<ShoppingListItemResponseDTO> getAllForUser(Long userId, Pageable pageable) {
         log.info("Fetching all shopping list items for user id: {}", userId);
 
-        return  shoppingListItemRepository.findByUserId(userId, Pageable.unpaged())
-                                    .getContent()
-                                    .stream()
-                                    .map(shoppingListItemMapper :: toDto)
-                                    .toList();
+        return  shoppingListItemRepository.findByUserId(userId, pageable)
+                                    .map(shoppingListItemMapper :: toDto);
     }
 
-    public Page<ShoppingListItemResponseDTO> getAllForUserSortedByCategory(Long userId) {
+    public Page<ShoppingListItemResponseDTO> getAllForUserSortedByCategory(Long userId, Pageable pageable) {
         log.info("Fetching all shopping list items sorted by category for user id: {}", userId);
 
-        return  shoppingListItemRepository.findByUserIdOrderByIngredientCategoryNameAsc(userId)
-                                    .stream()
-                                    .map(shoppingListItemMapper :: toDto)
-                                    .toList();
+        return  shoppingListItemRepository.findByUserIdOrderByIngredientCategoryNameAsc(userId, pageable)
+                                    .map(shoppingListItemMapper :: toDto);
     }
 
     public List<ShoppingListItemResponseDTO> getUncheckedForUser(Long userId) {
@@ -95,7 +89,7 @@ public class ShoppingListItemService {
     
     @Transactional
     public ShoppingListItemResponseDTO patch(Long userId, Long id, ShoppingListItemPatchDTO dto) {
-        log.info("Updating pantry item id: {} for user id: {}", id, userId);
+        log.info("Updating shopping list item id: {} for user id: {}", id, userId);
 
         ShoppingListItem item = findItemByIdAndUserId(id, userId);
 
@@ -147,49 +141,49 @@ public class ShoppingListItemService {
         log.info("Adding missing ingredients from recipe id: {} to shopping list for user id: {}", recipeId, userId);
 
         //Get user's pantry ids
-        Set<Long> pantryIds = pantryItemRepository.findByUserId(userId, Pageable.unpaged())
-                    .getContent()
-                    .stream()
-                    .map(item -> item.getIngredient().getId())
-                    .collect(Collectors.toSet());
+        Set<Long> pantryIds = pantryItemRepository.findIngredientIdsByUserId(userId);
 
-        //Get recipe ingredients
+        //Get recipe and check existence    
         Recipe recipe = recipeRepository.findById(recipeId).orElseThrow(() -> {
             log.warn("Recipe not found with id: {}", recipeId);
             return new ResourceNotFoundException("Recipe not found with id: " + recipeId);
         });
 
+        //Fetch user
+        User user = findUserById(userId);
+
         //Find missing ingredients and add to shopping list
         for (RecipeIngredients ri : recipe.getRecipeIngredients()) {
             Long ingredientId = ri.getIngredient().getId();
 
-            if(!pantryIds.contains(ingredientId)) {
-                //Skip if ingredient is already on the shopping list
-                if(shoppingListItemRepository.existsByUserIdAndIngredientId(userId, ingredientId)) {
-                    log.debug("Ingredient id: {} already in shopping list, skipping", ingredientId);
-                    continue;
-                }
+            if(pantryIds.contains(ingredientId)) {
+                log.debug("Ingredient id: {} already in pantry, skipping", ingredientId);
+                continue;
+            }
 
-                User user = findUserById(userId);
+            if(shoppingListItemRepository.existsByUserIdAndIngredientId(userId, ingredientId)) {
+                log.debug("Ingredient id: {} already in shopping list, skipping", ingredientId);
+                continue;
+            }
 
-                ShoppingListItem item = ShoppingListItem.builder()
+            ShoppingListItem item = ShoppingListItem.builder()
                         .user(user)
                         .ingredient(ri.getIngredient())
                         .checked(false)
                         .build();
-
-                shoppingListItemRepository.save(item);
-                log.debug("Added ingredient id: {} to shopping list for user id: {}", ingredientId, userId);
+                
+            shoppingListItemRepository.save(item);
+            log.debug("Added ingredient id: {} to shopping list for user id: {}", ingredientId, userId);    
             }
-        }
         log.debug("Finished adding missing ingredients from recipe id: {}", recipeId);
     }
 
     // Convenience method — just toggle checked without sending full patch
-    public ShoppingListItemResponseDTO toggleChecked(Long userId, Long itemId) {
-        log.info("Toggling checked for shopping list item id: {} for user id: {}", itemId, userId);
+    @Transactional
+    public ShoppingListItemResponseDTO toggleChecked(Long userId, Long id) {
+        log.info("Toggling checked for shopping list item id: {} for user id: {}", id, userId);
 
-        ShoppingListItem item = findItemByIdAndUserId(itemId, userId);
+        ShoppingListItem item = findItemByIdAndUserId(id, userId);
         item.setChecked(!item.isChecked());  // flip true→false or false→true
 
         ShoppingListItem saved = shoppingListItemRepository.save(item);

@@ -2,11 +2,14 @@ package com.elena.recipeapp.pantry.repository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.elena.recipeapp.pantry.model.PantryItem;
@@ -34,5 +37,10 @@ public interface PantryItemRepository extends JpaRepository<PantryItem, Long> {
 
     //If a specific ingredient is in the pantry
     boolean existsByUserIdAndIngredientId(Long userId, Long ingredientId);
+
+    // Lightweight — fetches only ingredient IDs, no joins needed, 
+    // to be used in recipe matching to check what ingredients are already in the pantry and to add missing ones to the shopping list
+    @Query("SELECT p.ingredient.id FROM PantryItem p WHERE p.user.id = :userId")
+    Set<Long> findIngredientIdsByUserId(@Param("userId") Long userId);
 
 }
