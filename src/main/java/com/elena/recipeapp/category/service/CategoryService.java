@@ -11,8 +11,8 @@ import com.elena.recipeapp.category.mapper.CategoryMapper;
 import com.elena.recipeapp.category.model.Category;
 import com.elena.recipeapp.category.repository.CategoryRepository;
 import com.elena.recipeapp.common.exceptions.ResourceNotFoundException;
+import com.elena.recipeapp.common.exceptions.DuplicateResourceException;
 
-import jakarta.persistence.Table;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,6 +29,10 @@ public class CategoryService {
     public CategoryResponseDTO create(CategoryRequestDTO dto) {
         log.info("Creating category with name: {}", dto.getName()); // info for important operations
 
+        if (categoryRepository.existsByName(dto.getName())) {
+            throw new DuplicateResourceException("Category already exists: " + dto.getName());
+        }
+
         Category category = categoryMapper.toEntity(dto);
         Category saved = categoryRepository.save(category);
 
@@ -38,7 +42,10 @@ public class CategoryService {
 
     public List<CategoryResponseDTO> getAll() {
         log.info("Fetching all categories");
-        return categoryRepository.findAll().stream().map(categoryMapper ::toDto).toList();
+        return categoryRepository.findAll()
+                            .stream()
+                            .map(categoryMapper ::toDto)
+                            .toList();
     }
 
     public CategoryResponseDTO getById(Long id) {
@@ -51,6 +58,12 @@ public class CategoryService {
     @Transactional
     public CategoryResponseDTO update(Long id, CategoryRequestDTO dto) {
         log.info("Updating category with id: {}", id);
+
+        categoryRepository.findByName(dto.getName())
+                .filter(existing -> !existing.getId().equals(id))
+                .ifPresent(existing -> {
+                    throw new DuplicateResourceException("Category name already in use: " + dto.getName());
+                });
 
         Category category = findCategoryById(id);
 

@@ -2,7 +2,9 @@ package com.elena.recipeapp.category.controller;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.elena.recipeapp.category.dto.CategoryRequestDTO;
@@ -32,9 +35,11 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @PostMapping
-    @Operation(summary = "Create a new category") //Using resoponseEntity to define better the errors
+    @PreAuthorize("hasRole('ADMIN')") // Only admin can create categories
+    @Operation(summary = "Create a new category (Admin only)") //Using resoponseEntity to define better the errors
+    @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<CategoryResponseDTO> create(@Valid @RequestBody CategoryRequestDTO dto) {
-        return ResponseEntity.status(201).body(categoryService.create(dto));
+        return ResponseEntity.status(HttpStatus.CREATED).body(categoryService.create(dto));
     }
 
     @GetMapping
@@ -50,13 +55,15 @@ public class CategoryController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Update category by id")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Update category by id (Admin only)")
     public ResponseEntity<CategoryResponseDTO> update(@PathVariable Long id, @Valid @RequestBody CategoryRequestDTO dto) {
         return ResponseEntity.ok(categoryService.update(id, dto));
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete category by id")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Delete category by id (Admin only)")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         categoryService.delete(id);
         return ResponseEntity.noContent().build();
