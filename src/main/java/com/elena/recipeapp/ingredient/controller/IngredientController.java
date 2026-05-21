@@ -2,7 +2,10 @@ package com.elena.recipeapp.ingredient.controller;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,15 +35,16 @@ public class IngredientController {
     private final IngredientService ingredientService;
 
     @PostMapping
-    @Operation(summary = "Create a new ingredient")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Create a new ingredient (Admin only)")
     public ResponseEntity<IngredientResponseDTO> create(@Valid @RequestBody IngredientRequestDTO dto) {
-        return ResponseEntity.status(201).body(ingredientService.create(dto));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ingredientService.create(dto));
     }    
 
     @GetMapping
     @Operation(summary = "Get list of all ingredients")
-    public ResponseEntity<Page<IngredientResponseDTO>> getAll() {
-        return ResponseEntity.ok(ingredientService.getAll(Pageable.unpaged()));
+    public ResponseEntity<Page<IngredientResponseDTO>> getAll(@PageableDefault(size = 20, sort = "name") Pageable pageable) {
+        return ResponseEntity.ok(ingredientService.getAll(pageable));
     }
 
     @GetMapping("/{id}")
@@ -50,13 +54,15 @@ public class IngredientController {
     }
 
     @PutMapping("/{id}")
-    @Operation(summary = "Update an ingredient by id")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Update an ingredient by id (Admin only)")
     public ResponseEntity<IngredientResponseDTO> update(@PathVariable Long id, @Valid @RequestBody IngredientRequestDTO dto) {
         return ResponseEntity.ok(ingredientService.update(id, dto));
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete ingredient by id") 
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Delete ingredient by id (Admin only)")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         ingredientService.delete(id);
         return ResponseEntity.noContent().build();

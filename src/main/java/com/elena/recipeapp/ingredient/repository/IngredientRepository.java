@@ -20,10 +20,12 @@ public interface IngredientRepository extends JpaRepository<Ingredient, Long> {
     @EntityGraph(attributePaths = {"category"})
     Optional<Ingredient> findById(Long id);
 
+    @EntityGraph(attributePaths = {"category"})
     Optional<Ingredient> findByName(String name);
 
     boolean existsByName(String name);
 
+    @EntityGraph(attributePaths = {"category"})
     List<Ingredient> findByCategoryId(Long categoryId);
 
 }
