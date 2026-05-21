@@ -1,7 +1,7 @@
 package com.elena.recipeapp.ingredient.controller;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,8 +39,8 @@ public class IngredientController {
 
     @GetMapping
     @Operation(summary = "Get list of all ingredients")
-    public ResponseEntity<List<IngredientResponseDTO>> getAll() {
-        return ResponseEntity.ok(ingredientService.getAll());
+    public ResponseEntity<Page<IngredientResponseDTO>> getAll() {
+        return ResponseEntity.ok(ingredientService.getAll(Pageable.unpaged()));
     }
 
     @GetMapping("/{id}")

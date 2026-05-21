@@ -2,6 +2,7 @@ package com.elena.recipeapp.ingredient.service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,10 +46,10 @@ public class IngredientService {
         return ingredientMapper.toDto(saved);
     }
 
-    public List<IngredientResponseDTO> getAll() {
+    public Page<IngredientResponseDTO> getAll(Pageable pageable) {
         log.info("Fetching all ingredients");
         
-        return ingredientRepository.findAll(Pageable.unpaged()).getContent().stream().map(ingredientMapper :: toDto).toList();
+        return ingredientRepository.findAll(pageable).map(ingredientMapper :: toDto);
     }
     
     public IngredientResponseDTO getById(Long id) {

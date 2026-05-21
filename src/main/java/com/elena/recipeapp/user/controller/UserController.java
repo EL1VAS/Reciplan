@@ -1,10 +1,11 @@
 package com.elena.recipeapp.user.controller;
 
-import java.util.List;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,9 +38,10 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    @Operation(summary = "Get list of all users")
-    public ResponseEntity<Page<UserResponseDTO>> getAll() {
-        return ResponseEntity.ok(userService.getAll(Pageable.unpaged()));
+    @PreAuthorize("hasRole('ADMIN')") // Only admin can see the list of users
+    @Operation(summary = "Get list of all users (admin only)")
+    public ResponseEntity<Page<UserResponseDTO>> getAll(@PageableDefault(size = 20, sort = "username") Pageable pageable) {
+        return ResponseEntity.ok(userService.getAll(pageable));
     }
     
     @GetMapping("/{id}")
@@ -50,23 +52,32 @@ public class UserController {
 
     @PatchMapping("/{id}")
     @Operation(summary = "Partially update user by id")
-    public ResponseEntity<UserResponseDTO> patch(@PathVariable Long id, @Valid @RequestBody UserPatchDTO dto) {
-        return ResponseEntity.ok(userService.patch(id, dto));
+    public ResponseEntity<UserResponseDTO> patch(
+                        @PathVariable Long id, 
+                        @Valid @RequestBody UserPatchDTO dto, 
+                        @AuthenticationPrincipal User requestingUser) {
+
+        return ResponseEntity.ok(userService.patch(id, dto, requestingUser));
     }
 
     @PutMapping("/{id}/password")
     @Operation(summary = "Change user password")
-    public ResponseEntity<Void> changePassword(@PathVariable Long id, @Valid @RequestBody ChangePasswordRequestDTO dto) {
-        userService.changePassword(id, dto);
+    public ResponseEntity<Void> changePassword(
+                        @PathVariable Long id, 
+                        @Valid @RequestBody ChangePasswordRequestDTO dto, 
+                        @AuthenticationPrincipal User requestingUser) {
+
+        userService.changePassword(id, dto, requestingUser);
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete user by id")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(
+                        @PathVariable Long targetId,
+                        @AuthenticationPrincipal User requestingUser) {
 
-        User requestingUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        userService.delete(requestingUser.getId(), id);
+        userService.delete(requestingUser.getId(), targetId);
         return ResponseEntity.noContent().build();
     }
 

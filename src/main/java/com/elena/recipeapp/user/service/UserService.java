@@ -1,7 +1,5 @@
 package com.elena.recipeapp.user.service;
 
-import java.util.List;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,7 +31,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     public Page<UserResponseDTO> getAll(Pageable pageable) {
-        log.info("Fetching all users");
+        log.info("Fetching all users - page: {}, size: {}", pageable.getPageNumber(), pageable.getPageSize());
         return userRepository.findAll(pageable).map(userMapper :: toDto);
     }
 
@@ -45,8 +43,13 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponseDTO patch(Long id, UserPatchDTO dto) {
+    public UserResponseDTO patch(Long id, UserPatchDTO dto, User requestingUser) {
         log.info("Updating user with id: {}", id);
+
+        // only the user themselves or an admin can patch
+        if (!requestingUser.getId().equals(id) && !requestingUser.getRole().equals(Roles.ADMIN)) {
+            throw new UnauthorizedException("You can only update your own account");
+        }
 
         User user = findUserById(id);
         userMapper.patchUser(dto, user);
@@ -56,8 +59,13 @@ public class UserService {
     }
 
     @Transactional
-    public void changePassword(Long id, ChangePasswordRequestDTO dto) {
+    public void changePassword(Long id, ChangePasswordRequestDTO dto, User requestingUser) {
         log.info("Changing password for user with id: {}", id);
+
+        // only the account owner can change their own password
+        if (!requestingUser.getId().equals(id)) {
+            throw new UnauthorizedException("You can only change your own password");
+        }
 
         User user = findUserById(id);
 
