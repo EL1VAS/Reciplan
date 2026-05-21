@@ -2,6 +2,7 @@ package com.elena.recipeapp.pantry.service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,25 +58,19 @@ public class PantryItemService {
         return pantryItemMapper.toDto(saved);
     }
 
-    public List<PantryItemResponseDTO> getAllForUser(Long userId) {
+    public Page<PantryItemResponseDTO> getAllForUser(Long userId, Pageable pageable) {
         log.info("Fetching all pantry items for user id: {}", userId);
 
-        return  pantryItemRepository.findByUserId(userId, Pageable.unpaged())
-                                    .getContent()
-                                    .stream()
-                                    .map(pantryItemMapper :: toDto)
-                                    .toList();
+        return  pantryItemRepository.findByUserId(userId, pageable)
+                                    .map(pantryItemMapper :: toDto);
     }
 
     //Pantry items sorted by category name ascending
-    public List<PantryItemResponseDTO> getAllForUserSortedByCategory(Long userId) {
+    public Page<PantryItemResponseDTO> getAllForUserSortedByCategory(Long userId, Pageable pageable) {
         log.info("Fetching all pantry items sorted by category for user id: {}", userId);
 
-        return  pantryItemRepository.findByUserIdOrderByIngredientCategoryNameAsc(userId, Pageable.unpaged())
-                                    .getContent()
-                                    .stream()
-                                    .map(pantryItemMapper :: toDto)
-                                    .toList();
+        return  pantryItemRepository.findByUserIdOrderByIngredientCategoryNameAsc(userId, pageable)
+                                    .map(pantryItemMapper :: toDto);
     }
 
     //Pantry items list filtered by category
@@ -88,6 +83,7 @@ public class PantryItemService {
                                     .toList();
     }
 
+    @Transactional
     public PantryItemResponseDTO patch(Long userId, Long itemId, PantryItemPatchDTO dto) {
         log.info("Updating pantry item id: {} for user id: {}", itemId, userId);
 
@@ -110,7 +106,7 @@ public class PantryItemService {
 
     @Transactional
     public void delete(Long userId, Long id) {
-        log.info("Deleting pantry item with id: {}", id);
+        log.info("Deleting pantry item with id: {} for user id: {}", id, userId);
 
         PantryItem pantryItem = findItemByIdAndUserId(id, userId);
         pantryItemRepository.delete(pantryItem);

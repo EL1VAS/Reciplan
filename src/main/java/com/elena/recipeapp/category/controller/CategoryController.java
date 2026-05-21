@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.elena.recipeapp.category.dto.CategoryRequestDTO;
@@ -37,7 +36,6 @@ public class CategoryController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')") // Only admin can create categories
     @Operation(summary = "Create a new category (Admin only)") //Using resoponseEntity to define better the errors
-    @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<CategoryResponseDTO> create(@Valid @RequestBody CategoryRequestDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(categoryService.create(dto));
     }
