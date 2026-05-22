@@ -3,7 +3,10 @@ package com.elena.recipeapp.recipe.controller;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -15,9 +18,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.elena.recipeapp.enums.Difficulty;
+import com.elena.recipeapp.recipe.dto.RecipeMatchResponseDTO;
+import com.elena.recipeapp.recipe.dto.RecipePatchDTO;
 import com.elena.recipeapp.recipe.dto.RecipeRequestDTO;
 import com.elena.recipeapp.recipe.dto.RecipeResponseDTO;
 import com.elena.recipeapp.recipe.service.RecipeService;
+import com.elena.recipeapp.user.model.User;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -35,9 +41,12 @@ public class RecipeController {
     private final RecipeService recipeService;
 
     @PostMapping("/users/{userId}")
-    @Operation(summary = "Create a new recipe")
-    public ResponseEntity<RecipeResponseDTO> create(@PathVariable Long userId, @Valid @RequestBody RecipeRequestDTO dto) {
-        return ResponseEntity.status(201).body(recipeService.create(userId, dto));
+    @PreAuthorize("hasRole ('ADMIN')")
+    @Operation(summary = "Create a new recipe (Admin only)")
+    public ResponseEntity<RecipeResponseDTO> create(
+        @Valid @RequestBody RecipeRequestDTO dto,
+        @AuthenticationPrincipal User requestingUser) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(recipeService.create(requestingUser.getId(), dto));
     }
 
     @GetMapping
@@ -61,20 +70,37 @@ public class RecipeController {
 
     @GetMapping("/by-ingredient/{ingredientId}")
     @Operation(summary = "Get all recipes that include this ingredient id")
-    public ResponseEntity<Page<RecipeResponseDTO>> getByIngredient(@PathVariable Long ingredientId, @PageableDefault(size = 10) Pageable pageable) {
+    public ResponseEntity<Page<RecipeResponseDTO>> getByIngredient(
+        @PathVariable Long ingredientId, 
+        @PageableDefault(size = 10) Pageable pageable) {
         return ResponseEntity.ok(recipeService.getByIngredient(ingredientId, pageable));
     }
 
-    @PatchMapping("/{id}/users/{userId}")
-    @Operation(summary = "Update a recipe(for authorized users)")
-    public ResponseEntity<RecipeResponseDTO> patch(@PathVariable Long userId, @PathVariable Long id, @Valid @RequestBody RecipeRequestDTO dto) {
-        return ResponseEntity.ok(recipeService.patch(userId, id, null));
+    @GetMapping("/matches")
+    @Operation(summary = "Get recipes matched against the current user's pantry")
+    public ResponseEntity<Page<RecipeMatchResponseDTO>> getMatches(
+            @AuthenticationPrincipal User requestingUser,
+            @PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(recipeService.getMatchesForUser(requestingUser.getId(), pageable));
     }
 
-    @DeleteMapping("/{id}/users/{userId}")
-    @Operation(summary = "Delete recipe")
-    public ResponseEntity<Void> delete(@PathVariable Long userId, @PathVariable Long id) {
-        recipeService.delete(userId, id);
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Update a recipe(for authorized users (Admin only))")
+    public ResponseEntity<RecipeResponseDTO> patch(
+        @PathVariable Long id, 
+        @Valid @RequestBody RecipePatchDTO dto,
+        @AuthenticationPrincipal User requestingUser) {
+        return ResponseEntity.ok(recipeService.patch(requestingUser.getId(), id, dto));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Delete recipe by id (Admin only)")
+    public ResponseEntity<Void> delete(
+        @PathVariable Long id,
+        @AuthenticationPrincipal User requestingUser) {
+        recipeService.delete(requestingUser.getId(), id);
         return ResponseEntity.noContent().build();
     }  
 }

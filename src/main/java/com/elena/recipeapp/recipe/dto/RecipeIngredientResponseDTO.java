@@ -1,5 +1,7 @@
 package com.elena.recipeapp.recipe.dto;
 
+import java.math.BigDecimal;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,6 +18,6 @@ public class RecipeIngredientResponseDTO {
     private Long ingredientId;
     private String ingredientName;
     private String categoryName;
-    private Double quantity;
+    private BigDecimal quantity;
     private String unit;
 }

@@ -17,6 +17,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.NamedAttributeNode;
+import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Min;
@@ -28,6 +30,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+@NamedEntityGraph(
+    name = "Recipe.withCreatedBy",
+    attributeNodes = @NamedAttributeNode("createdBy")
+)
 @Entity
 @Table(name = "recipes")
 @Getter

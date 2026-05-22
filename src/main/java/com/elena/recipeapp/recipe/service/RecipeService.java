@@ -1,12 +1,13 @@
 package com.elena.recipeapp.recipe.service;
 
-import java.rmi.server.LogStream;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -102,8 +103,9 @@ public class RecipeService {
     @Transactional
     public RecipeResponseDTO patch(Long userId, Long id, RecipePatchDTO dto) {
         log.info("Updating recipe with id: {}", id);
+        
         Recipe recipe = findRecipeById(id);
-        checkOwnership(userId, id);
+        checkOwnership(recipe, userId);
 
         recipeMapper.patchRecipe(dto, recipe);
 
@@ -125,8 +127,8 @@ public class RecipeService {
     @Transactional
     public void delete(Long userId, Long id) {
         log.info("Deleting recipe id: {}", id);
-        findRecipeById(id);
-        checkOwnership(userId, id);
+        Recipe recipe = findRecipeById(id);
+        checkOwnership(recipe, userId);
         recipeRepository.deleteById(id);
         log.debug("Deleted recipe with id: {} created by user id: {}", id, userId);
     }
@@ -134,21 +136,26 @@ public class RecipeService {
     
     public Page<RecipeMatchResponseDTO> getMatchesForUser(Long userId, Pageable pageable) {
         log.info("Fetching recipe matches for user id: {}", userId);
-        //Get pantry ingredient ids
-        Set<Long> pantryIds = pantryItemRepository.findByUserId(userId, Pageable.unpaged())
-                .getContent()
-                .stream()
-                .map(item -> item.getIngredient().getId())
-                .collect(Collectors.toSet());
 
-        //Score each recipe
-        return recipeRepository.findAll(pageable)
-                .getContent()
+        //Get pantry ingredient ids
+        Set<Long> pantryIds = pantryItemRepository.findIngredientIdsByUserId(userId);
+
+        //Score and filter recipes then paginate manually
+
+        List<RecipeMatchResponseDTO> matches = recipeRepository.findAll()
                 .stream()
                 .map(recipe -> scoreRecipe(recipe, pantryIds))
                 .filter(match -> match.getMatchStatus() != MatchStatus.NO_MATCH)
                 .sorted(Comparator.comparing(match -> match.getMatchStatus().ordinal()))
-                .
+                .toList();
+
+        //Manual pagination slice
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), matches.size());
+        List<RecipeMatchResponseDTO> pageContent = start >= matches.size() 
+                ? List.of() 
+                : matches.subList(start, end);
+        return new PageImpl<>(pageContent, pageable, matches.size());
     } 
 
 
@@ -168,26 +175,37 @@ public class RecipeService {
         });
     }
 
-    private void checkOwnership(Long userId, Long id) {
-        if (!recipeRepository.existsByIdAndCreatedById(id, userId)) {
-            log.warn("User with id: {} attempted to modify recipe with id: {} they don't own", userId, id);
+    private void checkOwnership(Recipe recipe, Long userId) {
+        if (!recipe.getCreatedBy().getId().equals(userId)) {
+            log.warn("User id: {} attempted to modify recipe id: {} they don't own", userId, recipe.getId());
             throw new UnauthorizedException("You are not authorized to modify this recipe");
         }
     }
 
     private List<RecipeIngredients> buildIngredientLines (List<RecipeIngredientRequestDTO> dtos, Recipe recipe) {
-        return dtos.stream().map(dto -> {
-            Ingredient ingredient = ingredientRepository.findById(dto.getIngredientId()).orElseThrow(()-> {
-                log.warn("Ingredient not found with id: {}", dto.getIngredientId());
-                        return new ResourceNotFoundException("Ingredient not found with id: " + dto.getIngredientId());
-            });
-            return RecipeIngredients.builder()
-                                    .recipe(recipe)
-                                    .ingredient(ingredient)
-                                    .quantity(dto.getQuantity())
-                                    .unit(dto.getUnit())
-                                    .build();
-            }).toList();        
+        
+        List<Long> ingredientIds = dtos.stream()
+                                    .map(RecipeIngredientRequestDTO::getIngredientId)
+                                    .toList();
+
+        Map<Long, Ingredient> ingredientMap = ingredientRepository.findAllById(ingredientIds)
+                                    .stream()
+                                    .collect(Collectors.toMap(Ingredient::getId, ingredient -> ingredient));
+
+        return dtos.stream()
+                .map(dto -> {
+                    Ingredient ingredient = ingredientMap.get(dto.getIngredientId());
+                    if(ingredient == null) {
+                        log.warn("Ingredient not found with id: {}", dto.getIngredientId());
+                        throw new ResourceNotFoundException("Ingredient not found with id: " + dto.getIngredientId());
+                    }
+                    return RecipeIngredients.builder()
+                            .recipe(recipe)
+                            .ingredient(ingredient)
+                            .quantity(dto.getQuantity())
+                            .unit(dto.getUnit())
+                            .build();
+            }).toList();
     }  
 
     private RecipeMatchResponseDTO scoreRecipe(Recipe recipe, Set<Long> pantryIds) {
