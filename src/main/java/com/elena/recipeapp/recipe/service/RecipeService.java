@@ -29,6 +29,7 @@ import com.elena.recipeapp.recipe.dto.RecipeResponseDTO;
 import com.elena.recipeapp.recipe.mapper.RecipeMapper;
 import com.elena.recipeapp.recipe.model.Recipe;
 import com.elena.recipeapp.recipe.model.RecipeIngredients;
+import com.elena.recipeapp.recipe.repository.RecipeIngredientsRepository;
 import com.elena.recipeapp.recipe.repository.RecipeRepository;
 import com.elena.recipeapp.recipe.specification.RecipeSpecification;
 import com.elena.recipeapp.user.model.User;
@@ -44,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 public class RecipeService {
     
     private final RecipeRepository recipeRepository;
+    private final RecipeIngredientsRepository recipeIngredientsRepository;
     private final RecipeMapper recipeMapper;
     private final IngredientRepository ingredientRepository;
     private final UserRepository userRepository;
@@ -92,7 +94,10 @@ public class RecipeService {
 
     public RecipeResponseDTO getById(Long id) {
         log.info("Fetching recipe with id: {}", id);
-        return recipeMapper.toDto(findRecipeById(id));
+
+        Recipe recipe = findRecipeById(id);
+        recipe.setRecipeIngredients(recipeIngredientsRepository.findByRecipeId(id));
+        return recipeMapper.toDto(recipe);
     }
 
     public Page<RecipeResponseDTO> getByIngredient(Long ingredientId, Pageable pageable) {
@@ -103,7 +108,7 @@ public class RecipeService {
     @Transactional
     public RecipeResponseDTO patch(Long userId, Long id, RecipePatchDTO dto) {
         log.info("Updating recipe with id: {}", id);
-        
+
         Recipe recipe = findRecipeById(id);
         checkOwnership(recipe, userId);
 
