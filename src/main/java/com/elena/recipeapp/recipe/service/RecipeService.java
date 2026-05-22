@@ -148,7 +148,7 @@ public class RecipeService {
 
         //Score and filter recipes then paginate manually
 
-        List<RecipeMatchResponseDTO> matches = recipeRepository.findAll()
+        List<RecipeMatchResponseDTO> matches = recipeRepository.findAllWithIngredients()
                 .stream()
                 .map(recipe -> scoreRecipe(recipe, pantryIds))
                 .filter(match -> match.getMatchStatus() != MatchStatus.NO_MATCH)
