@@ -16,6 +16,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 public class RecipeResponseDTO {
+    
     private Long id;
     private String title;
     private String instructions;
