@@ -11,6 +11,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import com.elena.recipeapp.recipe.model.Recipe;
@@ -28,6 +29,7 @@ public interface RecipeRepository extends JpaRepository<Recipe, Long>, JpaSpecif
     Page<Recipe> findAll(Specification<Recipe> spec, Pageable pageable);
 
     // Used by: getMatchesForUser 
+    @Query("SELECT r FROM Recipe r") //used to stop Spring Data to try parse from the name
     @EntityGraph(attributePaths = {"createdBy", "recipeIngredients", "recipeIngredients.ingredient"})
     List<Recipe> findAllWithIngredients();
 
