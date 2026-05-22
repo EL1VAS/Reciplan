@@ -23,6 +23,7 @@ import com.elena.recipeapp.ingredient.repository.IngredientRepository;
 import com.elena.recipeapp.pantry.repository.PantryItemRepository;
 import com.elena.recipeapp.recipe.dto.RecipeIngredientRequestDTO;
 import com.elena.recipeapp.recipe.dto.RecipeMatchResponseDTO;
+import com.elena.recipeapp.recipe.dto.RecipeListResponseDTO;
 import com.elena.recipeapp.recipe.dto.RecipePatchDTO;
 import com.elena.recipeapp.recipe.dto.RecipeRequestDTO;
 import com.elena.recipeapp.recipe.dto.RecipeResponseDTO;
@@ -70,7 +71,7 @@ public class RecipeService {
         return recipeMapper.toDto(saved);
     }
 
-    public Page<RecipeResponseDTO> getAll(
+    public Page<RecipeListResponseDTO> getAll(
         String title,
         Difficulty difficulty,
         Integer maxPrepTime,
@@ -100,13 +101,13 @@ public class RecipeService {
         return recipeMapper.toDto(recipe);
     }
 
-    public Page<RecipeResponseDTO> getByIngredient(Long ingredientId, Pageable pageable) {
+    public Page<RecipeListResponseDTO> getByIngredient(Long ingredientId, Pageable pageable) {
         log.info("Fetching recipes that include ingredient with id: {}", ingredientId);
         return recipeRepository.findByRecipeIngredientsIngredientId(ingredientId, pageable).map(recipeMapper :: toListDto);
     }
  
     @Transactional
-    public RecipeResponseDTO patch(Long userId, Long id, RecipePatchDTO dto) {
+    public RecipeListResponseDTO patch(Long userId, Long id, RecipePatchDTO dto) {
         log.info("Updating recipe with id: {}", id);
 
         Recipe recipe = findRecipeById(id);
@@ -225,7 +226,7 @@ public class RecipeService {
         List<Long> missingIds = PantryMatcherUtil.getMissingIngredientIds(pantryIds, recipeIngredientIds);
 
         return RecipeMatchResponseDTO.builder()
-                    .recipe(recipeMapper.toDto(recipe))
+                    .recipe(recipeMapper.toListDto(recipe))
                     .matchStatus(status)
                     .missingIngredientIds(missingIds)
                     .build();

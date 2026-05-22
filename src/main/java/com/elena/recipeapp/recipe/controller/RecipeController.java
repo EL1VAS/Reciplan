@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.elena.recipeapp.enums.Difficulty;
+import com.elena.recipeapp.recipe.dto.RecipeListResponseDTO;
 import com.elena.recipeapp.recipe.dto.RecipeMatchResponseDTO;
 import com.elena.recipeapp.recipe.dto.RecipePatchDTO;
 import com.elena.recipeapp.recipe.dto.RecipeRequestDTO;
@@ -51,7 +52,7 @@ public class RecipeController {
 
     @GetMapping
     @Operation(summary = "Get all recipes with optional filters")
-    public ResponseEntity<Page<RecipeResponseDTO>> getAll(
+    public ResponseEntity<Page<RecipeListResponseDTO>> getAll(
         @RequestParam(required = false) String title, 
         @RequestParam(required = false) Difficulty difficulty, 
         @RequestParam(required = false) Integer maxPrepTime, 
@@ -70,7 +71,7 @@ public class RecipeController {
 
     @GetMapping("/by-ingredient/{ingredientId}")
     @Operation(summary = "Get all recipes that include this ingredient id")
-    public ResponseEntity<Page<RecipeResponseDTO>> getByIngredient(
+    public ResponseEntity<Page<RecipeListResponseDTO>> getByIngredient(
         @PathVariable Long ingredientId, 
         @PageableDefault(size = 10) Pageable pageable) {
         return ResponseEntity.ok(recipeService.getByIngredient(ingredientId, pageable));
@@ -87,7 +88,7 @@ public class RecipeController {
     @PatchMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update a recipe(for authorized users (Admin only))")
-    public ResponseEntity<RecipeResponseDTO> patch(
+    public ResponseEntity<RecipeListResponseDTO> patch(
         @PathVariable Long id, 
         @Valid @RequestBody RecipePatchDTO dto,
         @AuthenticationPrincipal User requestingUser) {

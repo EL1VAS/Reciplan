@@ -17,7 +17,7 @@ import lombok.Setter;
 @Builder
 public class RecipeMatchResponseDTO {
 
-    private RecipeResponseDTO recipe;
+    private RecipeListResponseDTO recipe;
     private MatchStatus matchStatus;
     private List<Long> missingIngredientIds;
 
