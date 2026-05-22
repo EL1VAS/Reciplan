@@ -3,6 +3,7 @@ package com.elena.recipeapp.recipe.repository;
 
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -17,14 +18,18 @@ import com.elena.recipeapp.recipe.model.Recipe;
 @Repository
 public interface RecipeRepository extends JpaRepository<Recipe, Long>, JpaSpecificationExecutor<Recipe> {
 
-    // Called by: recipeService.getAll(pageable) — no filters
+    // Used by: getAll (no filter) — kept for completeness
     @EntityGraph(attributePaths = {"createdBy"})
     Page<Recipe> findAll(Pageable pageable);
 
     // Loads createdBy, but NOT recipeIngredients — handled separately used for filtering
-    // No method conflict as they have different parameters (Specification vs Pageable)
+    // Used by: getAll (filtered)
     @EntityGraph("Recipe.withCreatedBy")
     Page<Recipe> findAll(Specification<Recipe> spec, Pageable pageable);
+
+    // Used by: getMatchesForUser 
+    @EntityGraph(attributePaths = {"createdBy", "recipeIngredients", "recipeIngredients.ingredient"})
+    List<Recipe> findAllWithIngredients();
 
     @EntityGraph(attributePaths = {"createdBy"})
     Optional<Recipe> findById(Long id);
