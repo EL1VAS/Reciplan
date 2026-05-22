@@ -1,5 +1,6 @@
 package com.elena.recipeapp.ingredient.controller;
 
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -43,7 +44,7 @@ public class IngredientController {
 
     @GetMapping
     @Operation(summary = "Get list of all ingredients")
-    public ResponseEntity<Page<IngredientResponseDTO>> getAll(@PageableDefault(size = 20, sort = "name") Pageable pageable) {
+    public ResponseEntity<Page<IngredientResponseDTO>> getAll(@ParameterObject @PageableDefault(size = 20, sort = "name") Pageable pageable) {
         return ResponseEntity.ok(ingredientService.getAll(pageable));
     }
 
