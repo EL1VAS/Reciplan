@@ -89,7 +89,7 @@ public class RecipeService {
             if(Boolean.TRUE.equals(lactoseFree))   spec = spec.and(RecipeSpecification.isLactoseFree());
             if(Boolean.TRUE.equals(glutenFree))   spec = spec.and(RecipeSpecification.isGlutenFree());
 
-            return recipeRepository.findAll(spec, pageable).map(recipeMapper :: toDto);
+            return recipeRepository.findAll(spec, pageable).map(recipeMapper :: toListDto);
     }
 
     public RecipeResponseDTO getById(Long id) {
@@ -102,7 +102,7 @@ public class RecipeService {
 
     public Page<RecipeResponseDTO> getByIngredient(Long ingredientId, Pageable pageable) {
         log.info("Fetching recipes that include ingredient with id: {}", ingredientId);
-        return recipeRepository.findByRecipeIngredientsIngredientId(ingredientId, pageable).map(recipeMapper :: toDto);
+        return recipeRepository.findByRecipeIngredientsIngredientId(ingredientId, pageable).map(recipeMapper :: toListDto);
     }
  
     @Transactional
@@ -126,7 +126,7 @@ public class RecipeService {
         Recipe saved = recipeRepository.save(recipe);
         log.debug("Recipe saved with id: {}", saved.getId());
 
-        return recipeMapper.toDto(saved);
+        return recipeMapper.toListDto(saved);
     }
 
     @Transactional

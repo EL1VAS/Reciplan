@@ -7,6 +7,7 @@ import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 
 import com.elena.recipeapp.recipe.dto.RecipeIngredientResponseDTO;
+import com.elena.recipeapp.recipe.dto.RecipeListResponseDTO;
 import com.elena.recipeapp.recipe.dto.RecipePatchDTO;
 import com.elena.recipeapp.recipe.dto.RecipeRequestDTO;
 import com.elena.recipeapp.recipe.dto.RecipeResponseDTO;
@@ -24,6 +25,9 @@ public interface RecipeMapper {
 
     @Mapping(source = "createdBy.username", target = "createdByUsername")
     RecipeResponseDTO toDto(Recipe recipe);
+
+    @Mapping(source = "createdBy.username", target = "createdByUsername")
+    RecipeListResponseDTO toListDto(Recipe recipe);
 
     @Mapping(source = "ingredient.id", target = "ingredientId")
     @Mapping(source = "ingredient.name", target = "ingredientName")
