@@ -1,5 +1,7 @@
 package com.elena.recipeapp.recipe.model;
 
+import java.math.BigDecimal;
+
 import com.elena.recipeapp.ingredient.model.Ingredient;
 
 import jakarta.persistence.Column;
@@ -43,8 +45,8 @@ public class RecipeIngredients {
 
     @NotNull
     @Positive
-    @Column(nullable = false)
-    private Double quantity;
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal quantity;
 
     @NotBlank
     @Column(nullable = false)
