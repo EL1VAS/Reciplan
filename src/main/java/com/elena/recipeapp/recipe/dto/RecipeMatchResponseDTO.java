@@ -19,6 +19,6 @@ public class RecipeMatchResponseDTO {
 
     private RecipeListResponseDTO recipe;
     private MatchStatus matchStatus;
-    private List<Long> missingIngredientIds;
+    private List<MissingIngredientDTO> missingIngredients;
 
 }

@@ -3,7 +3,6 @@ package com.elena.recipeapp.recipe.service;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
@@ -20,7 +19,9 @@ import com.elena.recipeapp.enums.Difficulty;
 import com.elena.recipeapp.enums.MatchStatus;
 import com.elena.recipeapp.ingredient.model.Ingredient;
 import com.elena.recipeapp.ingredient.repository.IngredientRepository;
+import com.elena.recipeapp.pantry.model.PantryItem;
 import com.elena.recipeapp.pantry.repository.PantryItemRepository;
+import com.elena.recipeapp.recipe.dto.MissingIngredientDTO;
 import com.elena.recipeapp.recipe.dto.RecipeIngredientRequestDTO;
 import com.elena.recipeapp.recipe.dto.RecipeMatchResponseDTO;
 import com.elena.recipeapp.recipe.dto.RecipeListResponseDTO;
@@ -143,14 +144,14 @@ public class RecipeService {
     public Page<RecipeMatchResponseDTO> getMatchesForUser(Long userId, Pageable pageable) {
         log.info("Fetching recipe matches for user id: {}", userId);
 
-        //Get pantry ingredient ids
-        Set<Long> pantryIds = pantryItemRepository.findIngredientIdsByUserId(userId);
+        //Get pantry items
+        List<PantryItem> pantryItems = pantryItemRepository.findByUserId(userId);
 
         //Score and filter recipes then paginate manually
 
         List<RecipeMatchResponseDTO> matches = recipeRepository.findAllWithIngredients()
                 .stream()
-                .map(recipe -> scoreRecipe(recipe, pantryIds))
+                .map(recipe -> scoreRecipe(recipe, pantryItems))
                 .filter(match -> match.getMatchStatus() != MatchStatus.NO_MATCH)
                 .sorted(Comparator.comparing(match -> match.getMatchStatus().ordinal()))
                 .toList();
@@ -214,22 +215,36 @@ public class RecipeService {
             }).toList();
     }  
 
-    private RecipeMatchResponseDTO scoreRecipe(Recipe recipe, Set<Long> pantryIds) {
+    private RecipeMatchResponseDTO scoreRecipe(Recipe recipe, List<PantryItem> pantryItems) {
 
-        List<Long> recipeIngredientIds = recipe.getRecipeIngredients()
-                    .stream()
-                    .map(ri -> ri.getIngredient().getId())
+        Map<Long, PantryItem> pantryItemMap = pantryItems.stream()
+                .collect(Collectors.toMap(pi -> pi.getIngredient().getId(), pi -> pi));
+        
+        MatchStatus status = PantryMatcherUtil.calculateMatchStatus(pantryItems, recipe.getRecipeIngredients());
+
+        List<MissingIngredientDTO> missingIngredients = recipe.getRecipeIngredients().stream()
+                    .filter(ri -> {
+                        PantryItem pantryItem = pantryItemMap.get(ri.getIngredient().getId());
+                        return pantryItem == null || !PantryMatcherUtil.hasEnough(pantryItem, ri);
+                    }).
+                    map(ri -> {
+                        PantryItem pantryItem = pantryItemMap.get(ri.getIngredient().getId());
+                        double missingQty = pantryItem == null 
+                                ? ri.getQuantity().doubleValue() // totally absent need full amount
+                                : PantryMatcherUtil.missingQuantity(pantryItem, ri); // present but not enough, calculate missing amount
+                        return MissingIngredientDTO.builder()
+                                .ingredientId(ri.getIngredient().getId())
+                                .ingredientName(ri.getIngredient().getName())
+                                .missingQuantity(missingQty)
+                                .unit(ri.getUnit())
+                    .build();
+                    })
                     .toList();
 
-        MatchStatus status = PantryMatcherUtil.calculateMatchStatus(pantryIds, recipeIngredientIds);
-
-        List<Long> missingIds = PantryMatcherUtil.getMissingIngredientIds(pantryIds, recipeIngredientIds);
-
-        return RecipeMatchResponseDTO.builder()
+            return RecipeMatchResponseDTO.builder()
                     .recipe(recipeMapper.toListDto(recipe))
                     .matchStatus(status)
-                    .missingIngredientIds(missingIds)
+                    .missingIngredients(missingIngredients)
                     .build();
     }
-
-}
+} 

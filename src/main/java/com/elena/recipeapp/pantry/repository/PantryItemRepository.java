@@ -21,6 +21,10 @@ public interface PantryItemRepository extends JpaRepository<PantryItem, Long> {
     @EntityGraph(attributePaths = {"ingredient", "ingredient.category"})
     Page<PantryItem> findByUserId(Long userId, Pageable pageable);
 
+    // Used for matching
+    @EntityGraph(attributePaths = {"ingredient"})
+    List<PantryItem> findByUserId(Long userId);
+
     @EntityGraph(attributePaths = {"ingredient", "ingredient.category"})
     Optional<PantryItem> findByIdAndUserId(Long id, Long userId);
 
