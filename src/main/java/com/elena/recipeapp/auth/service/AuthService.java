@@ -57,6 +57,34 @@ public class AuthService {
                     .build();
     }
 
+    @Transactional
+    public AuthResponseDTO registerAdmin(RegisterRequestDTO request) {
+        log.info("Admin registration attempt for email: {}", request.getEmail());
+
+        if(userRepository.existsByEmail(request.getEmail())) {
+            log.warn("Admin registration failed - email already in use: {}", request.getEmail());
+            throw new DuplicateResourceException("Email already in use: " + request.getEmail());
+        }
+
+        User user = User.builder()
+                    .username(request.getUsername())
+                    .email(request.getEmail())
+                    .password(passwordEncoder.encode(request.getPassword()))
+                    .role(Roles.ADMIN)
+                    .build();
+
+        userRepository.save(user);
+
+        String token = jwtService.generateToken(user);
+        log.info("Admin registered successfully: {}", user.getUsername());
+
+        return AuthResponseDTO.builder()
+                    .token(token)
+                    .username(user.getUsername())
+                    .role(user.getRole().name())
+                    .build();
+    }
+
     public AuthResponseDTO login(LoginRequestDTO request) {
         log.info("Login attempt for email: {}", request.getEmail());
 
