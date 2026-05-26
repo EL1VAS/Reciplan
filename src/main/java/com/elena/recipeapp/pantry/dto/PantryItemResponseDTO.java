@@ -1,5 +1,7 @@
 package com.elena.recipeapp.pantry.dto;
 
+import com.elena.recipeapp.enums.Unit;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,5 +19,5 @@ public class PantryItemResponseDTO {
     private String ingredientName;
     private String categoryName;
     private Double quantity;
-    private String unit;
+    private Unit unit;
 }

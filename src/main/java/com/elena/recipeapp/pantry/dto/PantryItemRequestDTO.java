@@ -1,6 +1,7 @@
 package com.elena.recipeapp.pantry.dto;
 
-import jakarta.validation.constraints.NotBlank;
+import com.elena.recipeapp.enums.Unit;
+
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
@@ -23,6 +24,6 @@ public class PantryItemRequestDTO {
     @Positive (message = "Quantity must have a positive value")
     private Double quantity;
 
-    @NotBlank (message = "Unit can't be blank")
-    private String unit;
+    @NotNull (message = "Unit can't be null")
+    private Unit unit;
 }

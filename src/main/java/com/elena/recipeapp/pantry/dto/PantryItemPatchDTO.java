@@ -1,5 +1,7 @@
 package com.elena.recipeapp.pantry.dto;
 
+import com.elena.recipeapp.enums.Unit;
+
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,6 +21,6 @@ public class PantryItemPatchDTO {
     @Positive (message = "Quantity must have a positive value")
     private Double quantity;
 
-    private String unit;
+    private Unit unit;
     
 }

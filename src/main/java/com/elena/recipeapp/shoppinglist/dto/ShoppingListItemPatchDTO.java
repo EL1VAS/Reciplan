@@ -1,5 +1,7 @@
 package com.elena.recipeapp.shoppinglist.dto;
 
+import com.elena.recipeapp.enums.Unit;
+
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,7 +21,7 @@ public class ShoppingListItemPatchDTO {
     @Positive (message = "Quantity value must be positive")
     private Double quantity;
 
-    private String unit;
+    private Unit unit;
 
     private Boolean checked; //not boolean because primitives can't be null
     
