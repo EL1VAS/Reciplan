@@ -23,6 +23,7 @@ import com.elena.recipeapp.user.model.User;
 import com.elena.recipeapp.user.service.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -61,6 +62,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}/password")
+    @ApiResponse(responseCode = "204", description = "Password changed successfully")
     @Operation(summary = "Change user password")
     public ResponseEntity<Void> changePassword(
                         @PathVariable Long id, 
@@ -72,6 +74,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
+    @ApiResponse(responseCode = "204", description = "User deleted successfully")
     @Operation(summary = "Delete user by id")
     public ResponseEntity<Void> delete(
                         @PathVariable Long targetId,

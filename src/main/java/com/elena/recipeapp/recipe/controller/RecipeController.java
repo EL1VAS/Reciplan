@@ -27,6 +27,7 @@ import com.elena.recipeapp.recipe.service.RecipeService;
 import com.elena.recipeapp.user.model.User;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -97,6 +98,7 @@ public class RecipeController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    @ApiResponse(responseCode = "204", description = "Recipe deleted successfully")
     @Operation(summary = "Delete recipe by id (Admin only)")
     public ResponseEntity<Void> delete(
         @PathVariable Long id,

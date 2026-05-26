@@ -25,6 +25,7 @@ import com.elena.recipeapp.pantry.service.PantryItemService;
 import com.elena.recipeapp.user.model.User;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -91,6 +92,7 @@ public class PantryItemController {
     }
 
     @DeleteMapping("/{itemId}")
+    @ApiResponse(responseCode = "204", description = "Pantry item deleted successfully")
     @Operation(summary = "Delete pantry item")
     public ResponseEntity<Void> delete(
             @PathVariable Long userId, 

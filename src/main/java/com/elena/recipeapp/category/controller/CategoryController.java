@@ -19,6 +19,7 @@ import com.elena.recipeapp.category.dto.CategoryResponseDTO;
 import com.elena.recipeapp.category.service.CategoryService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -61,6 +62,7 @@ public class CategoryController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    @ApiResponse(responseCode = "204", description = "Category deleted successfully")
     @Operation(summary = "Delete category by id (Admin only)")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         categoryService.delete(id);

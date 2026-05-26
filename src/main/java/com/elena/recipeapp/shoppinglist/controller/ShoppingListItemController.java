@@ -25,6 +25,7 @@ import com.elena.recipeapp.shoppinglist.service.ShoppingListItemService;
 import com.elena.recipeapp.user.model.User;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -90,6 +91,7 @@ public class ShoppingListItemController {
     }
 
     @DeleteMapping("/{itemId}")
+    @ApiResponse(responseCode = "204", description = "Item deleted successfully")
     @Operation(summary = "Delete item of shopping list by id")
     public ResponseEntity<Void> delete(
                     @PathVariable Long userId, 
@@ -101,6 +103,7 @@ public class ShoppingListItemController {
     }
 
     @DeleteMapping
+    @ApiResponse(responseCode = "204", description = "Shopping list cleared successfully")
     @Operation(summary = "Clear entire shopping list")
     public ResponseEntity<Void> clearAll(
                     @PathVariable Long userId, 
@@ -111,6 +114,7 @@ public class ShoppingListItemController {
     }
 
     @DeleteMapping("/checked")
+    @ApiResponse(responseCode = "204", description = "Checked items cleared successfully")
     @Operation(summary = "Clear all checked items from shopping list")
     public ResponseEntity<Void> clearChecked(
                     @PathVariable Long userId, 
@@ -130,7 +134,8 @@ public class ShoppingListItemController {
         return ResponseEntity.ok(shoppingListItemService.toggleChecked(userId, itemId));
     }
 
-    @PostMapping("/from-recipe/{recipeId}")   
+    @PostMapping("/from-recipe/{recipeId}")  
+    @ApiResponse(responseCode = "204", description = "Missing ingredients added to shopping list") 
     @Operation(summary = "Add missing recipe ingredients to shopping list")
     public ResponseEntity<Void> addFromRecipe(
             @PathVariable Long userId,
