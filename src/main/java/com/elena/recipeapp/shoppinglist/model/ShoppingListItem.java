@@ -1,5 +1,7 @@
 package com.elena.recipeapp.shoppinglist.model;
 
+import java.math.BigDecimal;
+
 import com.elena.recipeapp.enums.Unit;
 import com.elena.recipeapp.ingredient.model.Ingredient;
 import com.elena.recipeapp.user.model.User;
@@ -46,8 +48,8 @@ public class ShoppingListItem {
 
     @NotNull
     @Positive
-    @Column(nullable = false)
-    private Double quantity;
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal quantity;
 
     @NotNull
     @Enumerated(EnumType.STRING)

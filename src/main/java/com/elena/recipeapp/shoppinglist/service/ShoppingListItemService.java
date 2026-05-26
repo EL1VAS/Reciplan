@@ -169,6 +169,8 @@ public class ShoppingListItemService {
             ShoppingListItem item = ShoppingListItem.builder()
                         .user(user)
                         .ingredient(ri.getIngredient())
+                        .quantity(ri.getQuantity())
+                        .unit(ri.getUnit())
                         .checked(false)
                         .build();
                 
