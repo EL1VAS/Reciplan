@@ -2,6 +2,7 @@ package com.elena.recipeapp.recipe.model;
 
 import java.math.BigDecimal;
 
+import com.elena.recipeapp.enums.Unit;
 import com.elena.recipeapp.ingredient.model.Ingredient;
 
 import jakarta.persistence.Column;
@@ -13,7 +14,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
@@ -48,8 +48,8 @@ public class RecipeIngredients {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal quantity;
 
-    @NotBlank
+    @NotNull
     @Column(nullable = false)
-    private String unit;
+    private Unit unit;
     
 }

@@ -2,6 +2,8 @@ package com.elena.recipeapp.recipe.dto;
 
 import java.math.BigDecimal;
 
+import com.elena.recipeapp.enums.Unit;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -25,6 +27,6 @@ public class RecipeIngredientRequestDTO {
     @Positive (message = "Quantity must have a positive value")
     private BigDecimal quantity;
 
-    @NotBlank (message = "Unit can't be blank")
-    private String unit;
+    @NotNull (message = "Unit can't be null")
+    private Unit unit;
 }
