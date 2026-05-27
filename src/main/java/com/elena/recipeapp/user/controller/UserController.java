@@ -82,10 +82,10 @@ public class UserController {
     @ApiResponse(responseCode = "204", description = "User deleted successfully")
     @Operation(summary = "Delete user by id")
     public ResponseEntity<Void> delete(
-                        @PathVariable Long targetId,
+                        @PathVariable Long id,
                         @AuthenticationPrincipal User requestingUser) {
 
-        userService.delete(requestingUser.getId(), targetId);
+        userService.delete(requestingUser.getId(), id);
         return ResponseEntity.noContent().build();
     }
 
