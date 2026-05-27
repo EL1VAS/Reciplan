@@ -39,6 +39,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 //public endpoints - no token needed
                 .requestMatchers("/api/auth/login", "/api/auth/register").permitAll()
+                .requestMatchers("/", "/index.html", "/*.html", "/*.css", "/*.js").permitAll()
                 //swagger endpoints - no token needed
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 //admin endpoints
