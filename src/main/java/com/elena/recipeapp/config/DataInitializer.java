@@ -1,6 +1,8 @@
 package com.elena.recipeapp.config;
 
 import com.elena.recipeapp.user.model.User;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -19,6 +21,12 @@ public class DataInitializer implements CommandLineRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Value("${app.init.admin-password}")
+    private String adminPassword;
+
+    @Value("${app.init.user-password}")
+    private String userPassword;
+
     @Override
     public void run(String... args) {
 
@@ -27,14 +35,14 @@ public class DataInitializer implements CommandLineRunner {
             User admin = User.builder()
                     .username("admin")
                     .email("admin@recipeapp.com")
-                    .password(passwordEncoder.encode("admin123"))
+                    .password(passwordEncoder.encode(adminPassword))
                     .role(Roles.ADMIN)
                     .build();
 
             User user = User.builder()
                     .username("elena")
                     .email("elena@recipeapp.com")
-                    .password(passwordEncoder.encode("password123"))
+                    .password(passwordEncoder.encode(userPassword))
                     .role(Roles.USER)
                     .build();
 
