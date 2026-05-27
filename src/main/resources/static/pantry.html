@@ -1,26 +1,30 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pantry – RecipeApp</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-<script src="api.js"></script>
-<script src="app.js"></script>
-<script>
-requireAuth();
-renderShell('Pantry');
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pantry – RecipeApp</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <script src="api.js"></script>
+    <script src="app.js"></script>
+    <script>
+      requireAuth();
+      renderShell("Pantry");
 
-let currentPage = 0;
-let sortByCategory = false;
-let allIngredients = [];
-let editingItemId = null;
+      let currentPage = 0;
+      let sortByCategory = false;
+      let allIngredients = [];
+      let editingItemId = null;
 
-document.getElementById('page-content').innerHTML = `
+      document.getElementById("page-content").innerHTML = `
   <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:var(--space-4)">
     <div>
       <h1 class="page-title">My Pantry</h1>
@@ -57,7 +61,7 @@ document.getElementById('page-content').innerHTML = `
             </div>
             <div class="form-group">
               <label class="form-label">Unit <span class="required">*</span></label>
-              <select class="form-control" id="pf-unit">${unitOptions('GRAM')}</select>
+              <select class="form-control" id="pf-unit">${unitOptions("GRAM")}</select>
             </div>
           </div>
         </form>
@@ -70,24 +74,40 @@ document.getElementById('page-content').innerHTML = `
   </div>
 `;
 
-async function loadIngredients() {
-  try {
-    let page = 0, all = [];
-    while (true) {
-      const res = await Ingredients.getAll(page, 100);
-      all = all.concat(res.content);
-      if (res.last) break; page++;
-    }
-    allIngredients = all;
-    const sel = document.getElementById('pf-ingredient');
-    sel.innerHTML = '<option value="">Select ingredient…</option>' +
-      all.map(i => `<option value="${i.id}">${i.name} (${i.categoryName})</option>`).join('');
-  } catch(e) { allIngredients = []; }
-}
+      async function loadIngredients() {
+        try {
+          let page = 0,
+            all = [];
+          while (true) {
+            const res = await Ingredients.getAll(page, 100);
+            all = all.concat(res.content);
+            if (res.last) break;
+            page++;
+          }
+          allIngredients = all;
+          const sel = document.getElementById("pf-ingredient");
+          sel.innerHTML =
+            '<option value="">Select ingredient…</option>' +
+            all
+              .map(
+                (i) =>
+                  `<option value="${i.id}">${i.name} (${i.categoryName})</option>`,
+              )
+              .join("");
+        } catch (e) {
+          allIngredients = [];
+        }
+      }
 
-function renderPantryItems(items) {
-  if (!items.length) return emptyState('Your pantry is empty. Add ingredients to get started!', '🧺');
-  return `<div class="item-list">${items.map(item => `
+      function renderPantryItems(items) {
+        if (!items.length)
+          return emptyState(
+            "Your pantry is empty. Add ingredients to get started!",
+            "🧺",
+          );
+        return `<div class="item-list">${items
+          .map(
+            (item) => `
     <div class="item-row">
       <div style="flex:1">
         <div class="item-name">${item.ingredientName}</div>
@@ -98,92 +118,132 @@ function renderPantryItems(items) {
         <button class="btn btn-ghost btn-sm btn-icon" onclick="openEditItem(${item.id}, ${item.quantity}, '${item.unit}')" aria-label="Edit">✏️</button>
         <button class="btn btn-danger btn-sm btn-icon" onclick="deleteItem(${item.id})" aria-label="Delete">🗑</button>
       </div>
-    </div>`).join('')}</div>`;
-}
+    </div>`,
+          )
+          .join("")}</div>`;
+      }
 
-async function loadPantry(page = 0) {
-  const userId = getUserId();
-  if (!userId) { document.getElementById('pantry-container').innerHTML = emptyState('User session not found. Please log in again.', '🔒'); return; }
-  const container = document.getElementById('pantry-container');
-  container.innerHTML = `<div class="item-list">${Array(5).fill(`<div class="item-row"><div class="skeleton skeleton-line" style="flex:1;height:1.2em"></div><div class="skeleton skeleton-line" style="width:80px"></div></div>`).join('')}</div>`;
-  try {
-    const data = sortByCategory
-      ? await Pantry.getSortedByCategory(userId, page)
-      : await Pantry.getAll(userId, page);
-    currentPage = page;
-    container.innerHTML = renderPantryItems(data.content || []);
-    renderPagination(data, 'pantry-pagination', loadPantry);
-  } catch(e) {
-    container.innerHTML = emptyState('Failed to load pantry.', '⚠️');
-    showAlert(e.message, 'error');
-  }
-}
+      async function loadPantry(page = 0) {
+        const userId = getUserId();
+        if (!userId) {
+          document.getElementById("pantry-container").innerHTML = emptyState(
+            "User session not found. Please log in again.",
+            "🔒",
+          );
+          return;
+        }
+        const container = document.getElementById("pantry-container");
+        container.innerHTML = `<div class="item-list">${Array(5).fill(`<div class="item-row"><div class="skeleton skeleton-line" style="flex:1;height:1.2em"></div><div class="skeleton skeleton-line" style="width:80px"></div></div>`).join("")}</div>`;
+        try {
+          const data = sortByCategory
+            ? await Pantry.getSortedByCategory(userId, page)
+            : await Pantry.getAll(userId, page);
+          currentPage = page;
+          container.innerHTML = renderPantryItems(data.content || []);
+          renderPagination(data, "pantry-pagination", loadPantry);
+        } catch (e) {
+          container.innerHTML = emptyState("Failed to load pantry.", "⚠️");
+          showAlert(e.message, "error");
+        }
+      }
 
-function openAddItem() {
-  editingItemId = null;
-  document.getElementById('pantry-form-title').textContent = 'Add to Pantry';
-  document.getElementById('pantry-form').reset();
-  document.getElementById('pf-unit').innerHTML = unitOptions('GRAM');
-  openModal('modal-pantry-form');
-}
+      function openAddItem() {
+        editingItemId = null;
+        document.getElementById("pantry-form-title").textContent =
+          "Add to Pantry";
+        document.getElementById("pantry-form").reset();
+        document.getElementById("pf-unit").innerHTML = unitOptions("GRAM");
+        openModal("modal-pantry-form");
+      }
 
-function openEditItem(id, quantity, unit) {
-  editingItemId = id;
-  document.getElementById('pantry-form-title').textContent = 'Edit Pantry Item';
-  document.getElementById('pf-quantity').value = quantity;
-  document.getElementById('pf-unit').innerHTML = unitOptions(unit);
-  // hide ingredient selector when editing (only qty/unit editable via PATCH)
-  document.getElementById('pf-ingredient').closest('.form-group').style.display = 'none';
-  openModal('modal-pantry-form');
-}
+      function openEditItem(id, quantity, unit) {
+        editingItemId = id;
+        document.getElementById("pantry-form-title").textContent =
+          "Edit Pantry Item";
+        document.getElementById("pf-quantity").value = quantity;
+        document.getElementById("pf-unit").innerHTML = unitOptions(unit);
+        // hide ingredient selector when editing (only qty/unit editable via PATCH)
+        document
+          .getElementById("pf-ingredient")
+          .closest(".form-group").style.display = "none";
+        openModal("modal-pantry-form");
+      }
 
-document.getElementById('btn-save-pantry').addEventListener('click', async () => {
-  const userId = getUserId();
-  const qty = parseFloat(document.getElementById('pf-quantity').value);
-  const unit = document.getElementById('pf-unit').value;
-  if (!qty || qty <= 0) { showAlert('Enter a valid quantity', 'error'); return; }
+      document
+        .getElementById("btn-save-pantry")
+        .addEventListener("click", async () => {
+          const userId = getUserId();
+          const qty = parseFloat(document.getElementById("pf-quantity").value);
+          const unit = document.getElementById("pf-unit").value;
+          if (!qty || qty <= 0) {
+            showAlert("Enter a valid quantity", "error");
+            return;
+          }
 
-  const btn = document.getElementById('btn-save-pantry');
-  btn.disabled = true; btn.textContent = 'Saving…';
-  try {
-    if (editingItemId) {
-      await Pantry.patch(userId, editingItemId, { quantity: qty, unit });
-      showAlert('Pantry item updated!', 'success');
-    } else {
-      const ingId = +document.getElementById('pf-ingredient').value;
-      if (!ingId) { showAlert('Select an ingredient', 'error'); btn.disabled = false; btn.textContent = 'Save'; return; }
-      await Pantry.add(userId, { ingredientId: ingId, quantity: qty, unit });
-      showAlert('Item added to pantry!', 'success');
-    }
-    // restore ingredient field visibility
-    document.getElementById('pf-ingredient').closest('.form-group').style.display = '';
-    closeModal('modal-pantry-form');
-    loadPantry(currentPage);
-  } catch(e) {
-    showAlert(e.message, 'error');
-  } finally {
-    btn.disabled = false; btn.textContent = 'Save';
-  }
-});
+          const btn = document.getElementById("btn-save-pantry");
+          btn.disabled = true;
+          btn.textContent = "Saving…";
+          try {
+            if (editingItemId) {
+              await Pantry.patch(userId, editingItemId, {
+                quantity: qty,
+                unit,
+              });
+              showAlert("Pantry item updated!", "success");
+            } else {
+              const ingId = +document.getElementById("pf-ingredient").value;
+              if (!ingId) {
+                showAlert("Select an ingredient", "error");
+                btn.disabled = false;
+                btn.textContent = "Save";
+                return;
+              }
+              await Pantry.add(userId, {
+                ingredientId: ingId,
+                quantity: qty,
+                unit,
+              });
+              showAlert("Item added to pantry!", "success");
+            }
+            // restore ingredient field visibility
+            document
+              .getElementById("pf-ingredient")
+              .closest(".form-group").style.display = "";
+            closeModal("modal-pantry-form");
+            loadPantry(currentPage);
+          } catch (e) {
+            showAlert(e.message, "error");
+          } finally {
+            btn.disabled = false;
+            btn.textContent = "Save";
+          }
+        });
 
-async function deleteItem(itemId) {
-  if (!confirm('Remove this item from your pantry?')) return;
-  try {
-    await Pantry.delete(getUserId(), itemId);
-    showAlert('Item removed', 'success');
-    loadPantry(currentPage);
-  } catch(e) { showAlert(e.message, 'error'); }
-}
+      async function deleteItem(itemId) {
+        if (!confirm("Remove this item from your pantry?")) return;
+        try {
+          await Pantry.delete(getUserId(), itemId);
+          showAlert("Item removed", "success");
+          loadPantry(currentPage);
+        } catch (e) {
+          showAlert(e.message, "error");
+        }
+      }
 
-document.getElementById('btn-add-item').addEventListener('click', openAddItem);
-document.getElementById('btn-toggle-sort').addEventListener('click', () => {
-  sortByCategory = !sortByCategory;
-  document.getElementById('btn-toggle-sort').textContent = sortByCategory ? 'Sort by Name' : 'Sort by Category';
-  loadPantry(0);
-});
+      document
+        .getElementById("btn-add-item")
+        .addEventListener("click", openAddItem);
+      document
+        .getElementById("btn-toggle-sort")
+        .addEventListener("click", () => {
+          sortByCategory = !sortByCategory;
+          document.getElementById("btn-toggle-sort").textContent =
+            sortByCategory ? "Sort by Name" : "Sort by Category";
+          loadPantry(0);
+        });
 
-loadIngredients();
-loadPantry(0);
-</script>
-</body>
+      loadIngredients();
+      loadPantry(0);
+    </script>
+  </body>
 </html>
