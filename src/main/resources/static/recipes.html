@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recipes – RecipeApp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<script src="api.js"></script>
+<script src="app.js"></script>
+<script>
+requireAuth();
+renderShell('Recipes');
+
+/* ── State ─────────────────────────────────────────────────────────────── */
+let currentPage = 0;
+let currentFilters = {};
+let allIngredients = [];
+let editingRecipeId = null;
+let ingredientRows = 0;
+
+/* ── Render page content ────────────────────────────────────────────────── */
+document.getElementById('page-content').innerHTML = `
+  <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:var(--space-4)">
+    <div>
+      <h1 class="page-title">Recipes</h1>
+      <p class="page-subtitle">Browse and discover recipes</p>
+    </div>
+    ${isAdmin() ? `<button class="btn btn-primary" id="btn-create-recipe">+ New Recipe</button>` : ''}
+  </div>
+
+  <!-- Filter bar -->
+  <div class="filter-bar">
+    <div class="search-input-wrapper">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input class="form-control" type="text" id="filter-title" placeholder="Search recipes…">
+    </div>
+    <div class="form-group">
+      <select class="form-control" id="filter-difficulty">
+        <option value="">Any difficulty</option>
+        <option value="EASY">Easy</option>
+        <option value="MEDIUM">Medium</option>
+        <option value="HARD">Hard</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <input class="form-control" type="number" id="filter-preptime" placeholder="Max prep time (min)" min="1" style="width:180px">
+    </div>
+    <div style="display:flex;gap:var(--space-4);align-items:center;flex-wrap:wrap">
+      <label class="form-check"><input type="checkbox" id="filter-veg"> Vegetarian</label>
+      <label class="form-check"><input type="checkbox" id="filter-lactose"> Lactose-free</label>
+      <label class="form-check"><input type="checkbox" id="filter-gluten"> Gluten-free</label>
+    </div>
+    <button class="btn btn-secondary" id="btn-apply-filters">Apply</button>
+    <button class="btn btn-ghost btn-sm" id="btn-clear-filters">Clear</button>
+  </div>
+
+  <!-- Tabs: All / Matches -->
+  <div class="tabs" style="margin-bottom:var(--space-6)">
+    <button class="tab-btn active" data-view="all">All Recipes</button>
+    <button class="tab-btn" data-view="matches">My Pantry Matches</button>
+  </div>
+
+  <div id="recipes-container"></div>
+  <div id="recipes-pagination"></div>
+
+  <!-- Recipe Detail Modal -->
+  <div class="modal-backdrop" id="modal-detail">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h2 class="modal-title" id="detail-title">Recipe</h2>
+        <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-detail')" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body" id="detail-body"></div>
+      <div class="modal-footer" id="detail-footer"></div>
+    </div>
+  </div>
+
+  <!-- Create / Edit Modal (admin) -->
+  <div class="modal-backdrop" id="modal-recipe-form">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h2 class="modal-title" id="recipe-form-title">New Recipe</h2>
+        <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-recipe-form')" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="recipe-form" novalidate>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Title <span class="required">*</span></label>
+              <input class="form-control" type="text" id="rf-title" maxlength="50" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Difficulty <span class="required">*</span></label>
+              <select class="form-control" id="rf-difficulty">${difficultyOptions()}</select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Prep time (min)</label>
+              <input class="form-control" type="number" id="rf-preptime" min="1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Cook time (min)</label>
+              <input class="form-control" type="number" id="rf-cooktime" min="1">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Instructions</label>
+            <textarea class="form-control" id="rf-instructions" rows="4" style="resize:vertical"></textarea>
+          </div>
+          <div class="checkboxes-row" style="margin-bottom:var(--space-5)">
+            <label class="form-check"><input type="checkbox" id="rf-vegetarian"> Vegetarian</label>
+            <label class="form-check"><input type="checkbox" id="rf-lactose"> Lactose-free</label>
+            <label class="form-check"><input type="checkbox" id="rf-gluten"> Gluten-free</label>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ingredients <span class="required">*</span></label>
+            <div class="ingredient-rows" id="ingredient-rows"></div>
+            <button type="button" class="btn btn-ghost btn-sm" id="btn-add-ingredient-row" style="margin-top:var(--space-3)">+ Add ingredient</button>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modal-recipe-form')">Cancel</button>
+        <button class="btn btn-primary" id="btn-save-recipe">Save Recipe</button>
+      </div>
+    </div>
+  </div>
+`;
+
+/* ── Load ingredients for selects ──────────────────────────────────────── */
+async function loadIngredients() {
+  try {
+    let page = 0, all = [];
+    while (true) {
+      const res = await Ingredients.getAll(page, 100);
+      all = all.concat(res.content);
+      if (res.last) break;
+      page++;
+    }
+    allIngredients = all;
+  } catch(e) { allIngredients = []; }
+}
+
+function ingredientSelectOptions(selectedId = '') {
+  return allIngredients.map(i =>
+    `<option value="${i.id}" ${i.id == selectedId ? 'selected' : ''}>${i.name} (${i.categoryName})</option>`
+  ).join('');
+}
+
+/* ── Render recipe grid ────────────────────────────────────────────────── */
+function diffBadge(d) {
+  const map = { EASY:'badge-easy', MEDIUM:'badge-medium', HARD:'badge-hard' };
+  return `<span class="badge ${map[d]||'badge-tag'}">${d}</span>`;
+}
+
+function renderRecipeCard(r, matchData = null) {
+  const tags = [
+    r.vegetarian ? '<span class="badge badge-veg">🌿 Veg</span>' : '',
+    r.lactoseFree ? '<span class="badge badge-tag">🥛 LF</span>' : '',
+    r.glutenFree  ? '<span class="badge badge-tag">🌾 GF</span>' : '',
+  ].filter(Boolean).join('');
+
+  let matchBadge = '';
+  if (matchData) {
+    const mc = matchData.matchStatus === 'FULL_MATCH' ? 'badge-match-full' :
+               matchData.matchStatus === 'PARTIAL_MATCH' ? 'badge-match-partial' : 'badge-match-none';
+    const ml = matchData.matchStatus === 'FULL_MATCH' ? '✅ Ready to cook' :
+               matchData.matchStatus === 'PARTIAL_MATCH' ? `⚠️ ${matchData.missingIngredients?.length} missing` : '❌ Missing items';
+    matchBadge = `<span class="badge ${mc}">${ml}</span>`;
+  }
+
+  return `
+    <div class="recipe-card">
+      <div class="recipe-card-title">${r.title}</div>
+      <div class="recipe-card-meta">
+        ${diffBadge(r.difficulty)}
+        ${tags}
+        ${matchBadge}
+      </div>
+      <div style="font-size:var(--text-xs);color:var(--color-text-muted)">
+        ⏱ ${(r.prepTimeMinutes||0)+(r.cookTimeMinutes||0)} min total · by ${r.createdByUsername||'admin'}
+      </div>
+      <div class="recipe-card-footer">
+        <button class="btn btn-secondary btn-sm" onclick="openRecipeDetail(${r.id})">View Recipe</button>
+        <div style="display:flex;gap:var(--space-2)">
+          ${getUserId() ? `<button class="btn btn-accent btn-sm" onclick="addToShoppingList(${r.id})" title="Add missing ingredients to shopping list">🛒</button>` : ''}
+          ${isAdmin() ? `<button class="btn btn-ghost btn-sm btn-icon" onclick="openEditRecipe(${r.id})" aria-label="Edit">✏️</button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteRecipe(${r.id})" aria-label="Delete">🗑</button>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ── Load & display ────────────────────────────────────────────────────── */
+let currentView = 'all';
+
+async function loadRecipes(page = 0) {
+  const container = document.getElementById('recipes-container');
+  container.innerHTML = `<div class="recipes-grid">${Array(6).fill(`<div class="card"><div class="card-body"><div class="skeleton skeleton-line" style="height:1.5em;width:70%"></div><div class="skeleton skeleton-line w60" style="margin-top:var(--space-3)"></div></div></div>`).join('')}</div>`;
+  try {
+    const data = await Recipes.getAll(currentFilters, page, 10);
+    currentPage = page;
+    if (!data.content?.length) {
+      container.innerHTML = emptyState('No recipes found. Try adjusting your filters.', '🍽️');
+      document.getElementById('recipes-pagination').innerHTML = '';
+      return;
+    }
+    container.innerHTML = `<div class="recipes-grid">${data.content.map(r => renderRecipeCard(r)).join('')}</div>`;
+    renderPagination(data, 'recipes-pagination', loadRecipes);
+  } catch(e) {
+    container.innerHTML = emptyState('Failed to load recipes.', '⚠️');
+    showAlert(e.message, 'error');
+  }
+}
+
+async function loadMatches(page = 0) {
+  const container = document.getElementById('recipes-container');
+  const userId = getUserId();
+  if (!userId) { container.innerHTML = emptyState('Log in to see pantry matches.', '🔒'); return; }
+  container.innerHTML = `<div class="recipes-grid">${Array(4).fill(`<div class="card"><div class="card-body"><div class="skeleton skeleton-line" style="height:1.5em;width:70%"></div></div></div>`).join('')}</div>`;
+  try {
+    const data = await Recipes.getMatches(page);
+    currentPage = page;
+    if (!data.content?.length) {
+      container.innerHTML = emptyState('No matches yet — add ingredients to your pantry!', '🧺');
+      document.getElementById('recipes-pagination').innerHTML = '';
+      return;
+    }
+    container.innerHTML = `<div class="recipes-grid">${data.content.map(m => renderRecipeCard(m.recipe, m)).join('')}</div>`;
+    renderPagination(data, 'recipes-pagination', loadMatches);
+  } catch(e) {
+    container.innerHTML = emptyState('Failed to load matches.', '⚠️');
+  }
+}
+
+/* ── Recipe detail ─────────────────────────────────────────────────────── */
+async function openRecipeDetail(id) {
+  document.getElementById('detail-title').textContent = 'Loading…';
+  document.getElementById('detail-body').innerHTML = `<div class="skeleton skeleton-line" style="height:2em;width:60%"></div>`;
+  document.getElementById('detail-footer').innerHTML = '';
+  openModal('modal-detail');
+  try {
+    const r = await Recipes.getById(id);
+    document.getElementById('detail-title').textContent = r.title;
+    const tags = [
+      r.vegetarian ? '<span class="badge badge-veg">🌿 Vegetarian</span>' : '',
+      r.lactoseFree ? '<span class="badge badge-tag">🥛 Lactose-free</span>' : '',
+      r.glutenFree  ? '<span class="badge badge-tag">🌾 Gluten-free</span>' : '',
+    ].filter(Boolean).join('');
+
+    document.getElementById('detail-body').innerHTML = `
+      <div class="detail-meta-row">
+        ${diffBadge(r.difficulty)}
+        <span class="badge badge-tag">⏱ Prep: ${r.prepTimeMinutes||'–'} min</span>
+        <span class="badge badge-tag">🔥 Cook: ${r.cookTimeMinutes||'–'} min</span>
+        ${tags}
+      </div>
+      <p style="font-size:var(--text-xs);color:var(--color-text-muted);margin-bottom:var(--space-5)">Created by ${r.createdByUsername||'admin'}</p>
+      ${r.instructions ? `<h3 style="font-size:var(--text-base);font-weight:600;margin-bottom:var(--space-3)">Instructions</h3><div class="instructions-box">${r.instructions}</div>` : ''}
+      <h3 style="font-size:var(--text-base);font-weight:600;margin:var(--space-5) 0 var(--space-3)">Ingredients (${r.recipeIngredients?.length||0})</h3>
+      <div class="item-list">
+        ${(r.recipeIngredients||[]).map(i => `
+          <div class="item-row">
+            <div style="flex:1">
+              <div class="item-name">${i.ingredientName}</div>
+              <div class="item-meta">${i.categoryName}</div>
+            </div>
+            <div class="item-qty">${i.quantity} ${i.unit}</div>
+          </div>`).join('')}
+      </div>`;
+
+    const footer = document.getElementById('detail-footer');
+    const userId = getUserId();
+    footer.innerHTML = `
+      ${userId ? `<button class="btn btn-accent" onclick="addToShoppingList(${r.id})">🛒 Add missing to shopping list</button>` : ''}
+      ${isAdmin() ? `<button class="btn btn-secondary" onclick="closeModal('modal-detail');openEditRecipe(${r.id})">✏️ Edit</button>` : ''}
+      <button class="btn btn-ghost" onclick="closeModal('modal-detail')">Close</button>`;
+  } catch(e) {
+    document.getElementById('detail-body').innerHTML = `<p style="color:var(--color-error)">Failed to load recipe.</p>`;
+  }
+}
+
+/* ── Add to shopping list ───────────────────────────────────────────────── */
+async function addToShoppingList(recipeId) {
+  const userId = getUserId();
+  if (!userId) { showAlert('Please log in first', 'error'); return; }
+  try {
+    await ShoppingList.addFromRecipe(userId, recipeId);
+    showAlert('Missing ingredients added to shopping list!', 'success');
+  } catch(e) {
+    showAlert(e.message, 'error');
+  }
+}
+
+/* ── Admin: Create / Edit ───────────────────────────────────────────────── */
+function addIngredientRow(ingId = '', qty = '', unit = 'GRAM') {
+  ingredientRows++;
+  const row = document.createElement('div');
+  row.className = 'ingredient-row';
+  row.dataset.row = ingredientRows;
+  row.innerHTML = `
+    <select class="form-control" name="ing-id">${ingredientSelectOptions(ingId)}</select>
+    <input class="form-control" type="number" name="ing-qty" placeholder="Qty" value="${qty}" min="0.01" step="0.01" style="width:90px">
+    <select class="form-control" name="ing-unit" style="width:110px">${unitOptions(unit)}</select>
+    <button type="button" class="btn btn-ghost btn-icon" onclick="this.closest('.ingredient-row').remove()" aria-label="Remove">✕</button>`;
+  document.getElementById('ingredient-rows').appendChild(row);
+}
+
+async function openCreateRecipe() {
+  editingRecipeId = null;
+  document.getElementById('recipe-form-title').textContent = 'New Recipe';
+  document.getElementById('recipe-form').reset();
+  document.getElementById('ingredient-rows').innerHTML = '';
+  ingredientRows = 0;
+  if (!allIngredients.length) await loadIngredients();
+  addIngredientRow();
+  openModal('modal-recipe-form');
+}
+
+async function openEditRecipe(id) {
+  editingRecipeId = id;
+  document.getElementById('recipe-form-title').textContent = 'Edit Recipe';
+  if (!allIngredients.length) await loadIngredients();
+  try {
+    const r = await Recipes.getById(id);
+    document.getElementById('rf-title').value       = r.title;
+    document.getElementById('rf-difficulty').value  = r.difficulty;
+    document.getElementById('rf-preptime').value    = r.prepTimeMinutes || '';
+    document.getElementById('rf-cooktime').value    = r.cookTimeMinutes || '';
+    document.getElementById('rf-instructions').value= r.instructions || '';
+    document.getElementById('rf-vegetarian').checked= r.vegetarian;
+    document.getElementById('rf-lactose').checked   = r.lactoseFree;
+    document.getElementById('rf-gluten').checked    = r.glutenFree;
+    document.getElementById('ingredient-rows').innerHTML = '';
+    ingredientRows = 0;
+    (r.recipeIngredients || []).forEach(i => addIngredientRow(i.ingredientId, i.quantity, i.unit));
+    if (!r.recipeIngredients?.length) addIngredientRow();
+    openModal('modal-recipe-form');
+  } catch(e) { showAlert('Failed to load recipe for editing', 'error'); }
+}
+
+document.getElementById('btn-add-ingredient-row')?.addEventListener('click', addIngredientRow);
+
+document.getElementById('btn-save-recipe')?.addEventListener('click', async () => {
+  const title = document.getElementById('rf-title').value.trim();
+  if (!title) { showAlert('Title is required', 'error'); return; }
+
+  const rows = document.querySelectorAll('#ingredient-rows .ingredient-row');
+  const recipeIngredients = Array.from(rows).map(row => ({
+    ingredientId: +row.querySelector('[name="ing-id"]').value,
+    quantity:     +row.querySelector('[name="ing-qty"]').value,
+    unit:          row.querySelector('[name="ing-unit"]').value,
+  })).filter(r => r.ingredientId && r.quantity > 0);
+
+  if (!recipeIngredients.length) { showAlert('Add at least one ingredient', 'error'); return; }
+
+  const dto = {
+    title,
+    difficulty:     document.getElementById('rf-difficulty').value,
+    prepTimeMinutes:+document.getElementById('rf-preptime').value || null,
+    cookTimeMinutes:+document.getElementById('rf-cooktime').value || null,
+    instructions:   document.getElementById('rf-instructions').value,
+    vegetarian:     document.getElementById('rf-vegetarian').checked,
+    lactoseFree:    document.getElementById('rf-lactose').checked,
+    glutenFree:     document.getElementById('rf-gluten').checked,
+    recipeIngredients,
+  };
+
+  const btn = document.getElementById('btn-save-recipe');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    if (editingRecipeId) {
+      await Recipes.patch(editingRecipeId, dto);
+      showAlert('Recipe updated!', 'success');
+    } else {
+      await Recipes.create(getUserId(), dto);
+      showAlert('Recipe created!', 'success');
+    }
+    closeModal('modal-recipe-form');
+    loadRecipes(currentPage);
+  } catch(e) {
+    showAlert(e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save Recipe';
+  }
+});
+
+async function deleteRecipe(id) {
+  if (!confirm('Delete this recipe?')) return;
+  try {
+    await Recipes.delete(id);
+    showAlert('Recipe deleted', 'success');
+    loadRecipes(currentPage);
+  } catch(e) { showAlert(e.message, 'error'); }
+}
+
+/* ── Filter events ──────────────────────────────────────────────────────── */
+document.getElementById('btn-apply-filters').addEventListener('click', () => {
+  currentFilters = {
+    title:      document.getElementById('filter-title').value.trim() || undefined,
+    difficulty: document.getElementById('filter-difficulty').value || undefined,
+    maxPrepTime:document.getElementById('filter-preptime').value || undefined,
+    vegetarian: document.getElementById('filter-veg').checked || undefined,
+    lactoseFree:document.getElementById('filter-lactose').checked || undefined,
+    glutenFree: document.getElementById('filter-gluten').checked || undefined,
+  };
+  loadRecipes(0);
+});
+
+document.getElementById('btn-clear-filters').addEventListener('click', () => {
+  currentFilters = {};
+  document.getElementById('filter-title').value = '';
+  document.getElementById('filter-difficulty').value = '';
+  document.getElementById('filter-preptime').value = '';
+  ['filter-veg','filter-lactose','filter-gluten'].forEach(id => document.getElementById(id).checked = false);
+  loadRecipes(0);
+});
+
+document.getElementById('filter-title').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('btn-apply-filters').click();
+});
+
+/* ── Tab toggle ─────────────────────────────────────────────────────────── */
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentView = btn.dataset.view;
+    document.getElementById('recipes-pagination').innerHTML = '';
+    currentView === 'all' ? loadRecipes(0) : loadMatches(0);
+  });
+});
+
+/* ── Admin create button ────────────────────────────────────────────────── */
+document.getElementById('btn-create-recipe')?.addEventListener('click', openCreateRecipe);
+
+/* ── Init ────────────────────────────────────────────────────────────────── */
+loadIngredients();
+loadRecipes(0);
+</script>
+</body>
+</html>

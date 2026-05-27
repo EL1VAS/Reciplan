@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ingredients – RecipeApp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<script src="api.js"></script>
+<script src="app.js"></script>
+<script>
+requireAuth();
+if (!isAdmin()) { window.location.href = 'dashboard.html'; }
+renderShell('Ingredients');
+
+let currentPage = 0;
+let editingId = null;
+let categories = [];
+
+document.getElementById('page-content').innerHTML = `
+  <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:var(--space-4)">
+    <div>
+      <h1 class="page-title">Ingredients</h1>
+      <p class="page-subtitle">Manage all available ingredients</p>
+    </div>
+    <button class="btn btn-primary" id="btn-create">+ New Ingredient</button>
+  </div>
+  <div class="card">
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>ID</th><th>Name</th><th>Category</th><th style="width:120px">Actions</th></tr></thead>
+        <tbody id="ing-table-body"></tbody>
+      </table>
+    </div>
+    <div class="card-footer"><div id="ing-pagination"></div></div>
+  </div>
+
+  <!-- Form Modal -->
+  <div class="modal-backdrop" id="modal-ing-form">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="ing-form-title">New Ingredient</h2>
+        <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-ing-form')" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Name <span class="required">*</span></label>
+          <input class="form-control" type="text" id="ing-name" minlength="2" maxlength="50" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category <span class="required">*</span></label>
+          <select class="form-control" id="ing-category"><option value="">Select category…</option></select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modal-ing-form')">Cancel</button>
+        <button class="btn btn-primary" id="btn-save-ing">Save</button>
+      </div>
+    </div>
+  </div>
+`;
+
+async function loadCategories() {
+  categories = await Categories.getAll();
+  const sel = document.getElementById('ing-category');
+  sel.innerHTML = '<option value="">Select category…</option>' +
+    categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+}
+
+async function loadIngredients(page = 0) {
+  const tbody = document.getElementById('ing-table-body');
+  tbody.innerHTML = `<tr><td colspan="4"><div class="skeleton skeleton-line" style="height:1.2em;width:60%"></div></td></tr>`;
+  try {
+    const data = await Ingredients.getAll(page, 20);
+    currentPage = page;
+    if (!data.content?.length) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:var(--color-text-muted)">No ingredients yet.</td></tr>`; return; }
+    tbody.innerHTML = data.content.map(i => `
+      <tr>
+        <td style="color:var(--color-text-muted);font-size:var(--text-xs)">${i.id}</td>
+        <td><strong>${i.name}</strong></td>
+        <td><span class="badge badge-tag">${i.categoryName}</span></td>
+        <td>
+          <div style="display:flex;gap:var(--space-2)">
+            <button class="btn btn-ghost btn-sm btn-icon" onclick="openEdit(${i.id}, '${i.name}', '${i.categoryName}')" aria-label="Edit">✏️</button>
+            <button class="btn btn-danger btn-sm btn-icon" onclick="deleteIngredient(${i.id})" aria-label="Delete">🗑</button>
+          </div>
+        </td>
+      </tr>`).join('');
+    renderPagination(data, 'ing-pagination', loadIngredients);
+  } catch(e) { showAlert(e.message, 'error'); }
+}
+
+function openCreate() {
+  editingId = null;
+  document.getElementById('ing-form-title').textContent = 'New Ingredient';
+  document.getElementById('ing-name').value = '';
+  document.getElementById('ing-category').value = '';
+  openModal('modal-ing-form');
+}
+
+function openEdit(id, name, categoryName) {
+  editingId = id;
+  document.getElementById('ing-form-title').textContent = 'Edit Ingredient';
+  document.getElementById('ing-name').value = name;
+  const cat = categories.find(c => c.name === categoryName);
+  document.getElementById('ing-category').value = cat?.id || '';
+  openModal('modal-ing-form');
+}
+
+document.getElementById('btn-save-ing').addEventListener('click', async () => {
+  const name = document.getElementById('ing-name').value.trim();
+  const catId = +document.getElementById('ing-category').value;
+  if (name.length < 2) { showAlert('Name must be at least 2 characters', 'error'); return; }
+  if (!catId) { showAlert('Select a category', 'error'); return; }
+  const btn = document.getElementById('btn-save-ing');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    editingId
+      ? await Ingredients.update(editingId, name, catId)
+      : await Ingredients.create(name, catId);
+    showAlert(editingId ? 'Ingredient updated!' : 'Ingredient created!', 'success');
+    closeModal('modal-ing-form');
+    loadIngredients(currentPage);
+  } catch(e) { showAlert(e.message, 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Save'; }
+});
+
+async function deleteIngredient(id) {
+  if (!confirm('Delete this ingredient?')) return;
+  try {
+    await Ingredients.delete(id);
+    showAlert('Ingredient deleted', 'success');
+    loadIngredients(currentPage);
+  } catch(e) { showAlert(e.message, 'error'); }
+}
+
+document.getElementById('btn-create').addEventListener('click', openCreate);
+loadCategories().then(() => loadIngredients(0));
+</script>
+</body>
+</html>

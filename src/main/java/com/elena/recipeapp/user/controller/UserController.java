@@ -38,6 +38,7 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/me")
+    @Operation
     public ResponseEntity<UserResponseDTO> getMe(@AuthenticationPrincipal User user) {
         return ResponseEntity.ok(userService.getById(user.getId()));
     }

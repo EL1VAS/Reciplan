@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Users – RecipeApp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<script src="api.js"></script>
+<script src="app.js"></script>
+<script>
+requireAuth();
+if (!isAdmin()) { window.location.href = 'dashboard.html'; }
+renderShell('Users');
+
+let currentPage = 0;
+
+document.getElementById('page-content').innerHTML = `
+  <div class="page-header">
+    <h1 class="page-title">Users</h1>
+    <p class="page-subtitle">All registered accounts</p>
+  </div>
+  <div class="card">
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>ID</th><th>Username</th><th>Email</th><th>Role</th><th style="width:80px">Actions</th></tr></thead>
+        <tbody id="users-table-body"></tbody>
+      </table>
+    </div>
+    <div class="card-footer"><div id="users-pagination"></div></div>
+  </div>
+`;
+
+async function loadUsers(page = 0) {
+  const tbody = document.getElementById('users-table-body');
+  tbody.innerHTML = `<tr><td colspan="5"><div class="skeleton skeleton-line" style="height:1.2em;width:60%"></div></td></tr>`;
+  try {
+    const data = await Users.getAll(page, 20);
+    currentPage = page;
+    const me = getUserId();
+    tbody.innerHTML = data.content.map(u => `
+      <tr>
+        <td style="color:var(--color-text-muted);font-size:var(--text-xs)">${u.id}</td>
+        <td><strong>${u.username}</strong>${u.id == me ? ' <span class="badge badge-veg" style="font-size:10px">you</span>' : ''}</td>
+        <td style="color:var(--color-text-muted)">${u.email}</td>
+        <td><span class="badge ${u.role === 'ROLE_ADMIN' ? 'badge-hard' : 'badge-tag'}">${u.role}</span></td>
+        <td>
+          ${u.id != me ? `<button class="btn btn-danger btn-sm btn-icon" onclick="deleteUser(${u.id}, '${u.username}')" aria-label="Delete">🗑</button>` : '–'}
+        </td>
+      </tr>`).join('');
+    renderPagination(data, 'users-pagination', loadUsers);
+  } catch(e) { showAlert(e.message, 'error'); }
+}
+
+async function deleteUser(id, username) {
+  if (!confirm(`Delete user "${username}"? This cannot be undone.`)) return;
+  try {
+    await Users.delete(id);
+    showAlert(`User ${username} deleted`, 'success');
+    loadUsers(currentPage);
+  } catch(e) { showAlert(e.message, 'error'); }
+}
+
+loadUsers(0);
+</script>
+</body>
+</html>

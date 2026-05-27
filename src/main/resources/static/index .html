@@ -200,9 +200,8 @@
             );
             saveAuth(res.token, res.username, res.role);
             // Fetch user id
-            const users = await request("GET", "/users?page=0&size=200");
-            const me = users?.content?.find((u) => u.username === res.username);
-            if (me) saveUserId(me.id);
+            const me = await request("GET", "/users/me");
+            saveUserId(me.id);
             window.location.href = "dashboard.html";
           } catch (err) {
             showAlert(err.message, "error");
@@ -226,9 +225,8 @@
               document.getElementById("reg-password").value,
             );
             saveAuth(res.token, res.username, res.role);
-            const users = await request("GET", "/users?page=0&size=200");
-            const me = users?.content?.find((u) => u.username === res.username);
-            if (me) saveUserId(me.id);
+            const me = await request("GET", "/users/me");
+            saveUserId(me.id);
             window.location.href = "dashboard.html";
           } catch (err) {
             showAlert(err.message, "error");

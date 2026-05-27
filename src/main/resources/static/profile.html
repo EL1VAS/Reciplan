@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile – RecipeApp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<script src="api.js"></script>
+<script src="app.js"></script>
+<script>
+requireAuth();
+renderShell('Profile');
+
+document.getElementById('page-content').innerHTML = `
+  <div class="page-header">
+    <h1 class="page-title">My Profile</h1>
+    <p class="page-subtitle">Update your account details</p>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-6);max-width:800px">
+
+    <!-- Profile details card -->
+    <div class="card">
+      <div class="card-header"><h2>Account Details</h2></div>
+      <div class="card-body" id="profile-details">
+        <div class="skeleton skeleton-line" style="height:1.2em;width:60%;margin-bottom:var(--space-4)"></div>
+        <div class="skeleton skeleton-line" style="height:1.2em;width:80%"></div>
+      </div>
+    </div>
+
+    <!-- Edit form card -->
+    <div class="card">
+      <div class="card-header"><h2>Edit Profile</h2></div>
+      <div class="card-body">
+        <form id="profile-form" novalidate>
+          <div class="form-group">
+            <label class="form-label">Username</label>
+            <input class="form-control" type="text" id="pf-username" minlength="3" maxlength="50" placeholder="New username">
+            <p class="form-hint">Leave blank to keep current</p>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input class="form-control" type="email" id="pf-email" placeholder="New email">
+            <p class="form-hint">Leave blank to keep current</p>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full">Save Changes</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Change password card -->
+    <div class="card" style="grid-column:1/-1;max-width:480px">
+      <div class="card-header"><h2>Change Password</h2></div>
+      <div class="card-body">
+        <form id="password-form" novalidate>
+          <div class="form-group">
+            <label class="form-label">Current Password <span class="required">*</span></label>
+            <input class="form-control" type="password" id="pw-current" required autocomplete="current-password">
+          </div>
+          <div class="form-group">
+            <label class="form-label">New Password <span class="required">*</span></label>
+            <input class="form-control" type="password" id="pw-new" required minlength="8" autocomplete="new-password" placeholder="min 8 characters">
+          </div>
+          <button type="submit" class="btn btn-primary btn-full">Change Password</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+`;
+
+async function loadProfile() {
+  const userId = getUserId();
+  if (!userId) return;
+  try {
+    const user = await Users.getById(userId);
+    document.getElementById('profile-details').innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:var(--space-4)">
+        <div>
+          <div style="font-size:var(--text-xs);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.06em;font-weight:600;margin-bottom:var(--space-1)">Username</div>
+          <div style="font-weight:600">${user.username}</div>
+        </div>
+        <div>
+          <div style="font-size:var(--text-xs);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.06em;font-weight:600;margin-bottom:var(--space-1)">Email</div>
+          <div>${user.email}</div>
+        </div>
+        <div>
+          <div style="font-size:var(--text-xs);color:var(--color-text-muted);text-transform:uppercase;letter-spacing:0.06em;font-weight:600;margin-bottom:var(--space-1)">Role</div>
+          <span class="badge ${user.role === 'ROLE_ADMIN' ? 'badge-hard' : 'badge-veg'}">${user.role}</span>
+        </div>
+      </div>`;
+    // Pre-fill form
+    document.getElementById('pf-username').placeholder = user.username;
+    document.getElementById('pf-email').placeholder    = user.email;
+  } catch(e) { showAlert('Failed to load profile', 'error'); }
+}
+
+document.getElementById('profile-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const userId = getUserId();
+  const dto = {};
+  const u = document.getElementById('pf-username').value.trim();
+  const em = document.getElementById('pf-email').value.trim();
+  if (u)  dto.username = u;
+  if (em) dto.email = em;
+  if (!Object.keys(dto).length) { showAlert('Enter at least one field to update', 'warning'); return; }
+  try {
+    const updated = await Users.patch(userId, dto);
+    // Update stored username
+    const user = getUser();
+    if (user) { user.username = updated.username; sessionStorage.setItem('user', JSON.stringify(user)); }
+    showAlert('Profile updated!', 'success');
+    document.getElementById('pf-username').value = '';
+    document.getElementById('pf-email').value = '';
+    loadProfile();
+  } catch(e) { showAlert(e.message, 'error'); }
+});
+
+document.getElementById('password-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const userId = getUserId();
+  const currentPassword = document.getElementById('pw-current').value;
+  const newPassword     = document.getElementById('pw-new').value;
+  if (newPassword.length < 8) { showAlert('New password must be at least 8 characters', 'error'); return; }
+  try {
+    await Users.changePassword(userId, { currentPassword, newPassword });
+    showAlert('Password changed successfully!', 'success');
+    document.getElementById('password-form').reset();
+  } catch(e) { showAlert(e.message, 'error'); }
+});
+
+loadProfile();
+</script>
+</body>
+</html>

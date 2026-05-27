@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Categories – RecipeApp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<script src="api.js"></script>
+<script src="app.js"></script>
+<script>
+requireAuth();
+if (!isAdmin()) { window.location.href = 'dashboard.html'; }
+renderShell('Categories');
+
+let editingId = null;
+
+document.getElementById('page-content').innerHTML = `
+  <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:var(--space-4)">
+    <div>
+      <h1 class="page-title">Categories</h1>
+      <p class="page-subtitle">Manage ingredient categories</p>
+    </div>
+    <button class="btn btn-primary" id="btn-create">+ New Category</button>
+  </div>
+  <div class="card">
+    <div class="table-wrapper">
+      <table>
+        <thead><tr><th>ID</th><th>Name</th><th style="width:120px">Actions</th></tr></thead>
+        <tbody id="cat-table-body"><tr><td colspan="3"><div class="skeleton skeleton-line" style="height:1.2em;width:50%"></div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Form Modal -->
+  <div class="modal-backdrop" id="modal-cat-form">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title" id="cat-form-title">New Category</h2>
+        <button class="btn btn-ghost btn-icon" onclick="closeModal('modal-cat-form')" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Name <span class="required">*</span></label>
+          <input class="form-control" type="text" id="cat-name" minlength="3" maxlength="50" required>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('modal-cat-form')">Cancel</button>
+        <button class="btn btn-primary" id="btn-save-cat">Save</button>
+      </div>
+    </div>
+  </div>
+`;
+
+async function loadCategories() {
+  try {
+    const cats = await Categories.getAll();
+    const tbody = document.getElementById('cat-table-body');
+    if (!cats.length) { tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;color:var(--color-text-muted)">No categories yet.</td></tr>`; return; }
+    tbody.innerHTML = cats.map(c => `
+      <tr>
+        <td style="color:var(--color-text-muted);font-size:var(--text-xs)">${c.id}</td>
+        <td><strong>${c.name}</strong></td>
+        <td>
+          <div style="display:flex;gap:var(--space-2)">
+            <button class="btn btn-ghost btn-sm btn-icon" onclick="openEdit(${c.id}, '${c.name}')" aria-label="Edit">✏️</button>
+            <button class="btn btn-danger btn-sm btn-icon" onclick="deleteCategory(${c.id})" aria-label="Delete">🗑</button>
+          </div>
+        </td>
+      </tr>`).join('');
+  } catch(e) { showAlert(e.message, 'error'); }
+}
+
+function openCreate() {
+  editingId = null;
+  document.getElementById('cat-form-title').textContent = 'New Category';
+  document.getElementById('cat-name').value = '';
+  openModal('modal-cat-form');
+}
+
+function openEdit(id, name) {
+  editingId = id;
+  document.getElementById('cat-form-title').textContent = 'Edit Category';
+  document.getElementById('cat-name').value = name;
+  openModal('modal-cat-form');
+}
+
+document.getElementById('btn-save-cat').addEventListener('click', async () => {
+  const name = document.getElementById('cat-name').value.trim();
+  if (name.length < 3) { showAlert('Name must be at least 3 characters', 'error'); return; }
+  const btn = document.getElementById('btn-save-cat');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    editingId ? await Categories.update(editingId, name) : await Categories.create(name);
+    showAlert(editingId ? 'Category updated!' : 'Category created!', 'success');
+    closeModal('modal-cat-form');
+    loadCategories();
+  } catch(e) { showAlert(e.message, 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Save'; }
+});
+
+async function deleteCategory(id) {
+  if (!confirm('Delete this category? This may affect ingredients using it.')) return;
+  try {
+    await Categories.delete(id);
+    showAlert('Category deleted', 'success');
+    loadCategories();
+  } catch(e) { showAlert(e.message, 'error'); }
+}
+
+document.getElementById('btn-create').addEventListener('click', openCreate);
+loadCategories();
+</script>
+</body>
+</html>
