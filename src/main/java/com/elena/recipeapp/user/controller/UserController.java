@@ -37,6 +37,11 @@ public class UserController {
 
     private final UserService userService;
 
+    @GetMapping("/me")
+    public ResponseEntity<UserResponseDTO> getMe(@AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(userService.getById(user.getId()));
+    }
+
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')") // Only admin can see the list of users
     @Operation(summary = "Get list of all users (admin only)")

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard – RecipeApp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<script src="api.js"></script>
+<script src="app.js"></script>
+<script>
+requireAuth();
+renderShell('Dashboard');
+
+(async () => {
+  const userId = getUserId();
+  const content = document.getElementById('page-content');
+  content.innerHTML = `
+    <div class="page-header">
+      <h1 class="page-title">Dashboard</h1>
+      <p class="page-subtitle">Welcome back, ${getUser()?.username || 'Chef'}!</p>
+    </div>
+    <div class="stats-grid" id="stats-grid">
+      ${[0,1,2,3].map(() => `<div class="stat-card"><div class="skeleton skeleton-line" style="height:44px;width:44px;border-radius:var(--radius-lg);margin-bottom:var(--space-4)"></div><div class="skeleton skeleton-line w60"></div><div class="skeleton skeleton-line" style="width:40%"></div></div>`).join('')}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-6)">
+      <div class="card" id="matches-card">
+        <div class="card-header"><h2>Recipes You Can Make</h2><a href="recipes.html" class="btn btn-ghost btn-sm">View all →</a></div>
+        <div class="card-body" id="matches-list">Loading…</div>
+      </div>
+      <div class="card" id="quick-actions-card">
+        <div class="card-header"><h2>Quick Actions</h2></div>
+        <div class="card-body" style="display:flex;flex-direction:column;gap:var(--space-3)">
+          <a href="recipes.html" class="btn btn-primary">Browse Recipes</a>
+          <a href="pantry.html" class="btn btn-secondary">Manage Pantry</a>
+          <a href="shopping-list.html" class="btn btn-secondary">Shopping List</a>
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Load stats in parallel
+  try {
+    const [recipesPage, matchesPage, pantryPage, shoppingPage] = await Promise.allSettled([
+      Recipes.getAll({}, 0, 1),
+      userId ? Recipes.getMatches(0) : null,
+      userId ? Pantry.getAll(userId, 0, 1) : null,
+      userId ? ShoppingList.getAll(userId, 0) : null,
+    ]);
+
+    const rTotal  = recipesPage.value?.totalElements  ?? '–';
+    const mTotal  = matchesPage.value?.totalElements  ?? '–';
+    const pTotal  = pantryPage.value?.totalElements   ?? '–';
+    const sTotal  = shoppingPage.value?.totalElements ?? '–';
+
+    document.getElementById('stats-grid').innerHTML = `
+      <div class="stat-card"><div class="stat-icon terracotta">🍲</div><div class="stat-value">${rTotal}</div><div class="stat-label">Total Recipes</div></div>
+      <div class="stat-card"><div class="stat-icon olive">✅</div><div class="stat-value">${mTotal}</div><div class="stat-label">Can Make Now</div></div>
+      <div class="stat-card"><div class="stat-icon gold">🧺</div><div class="stat-value">${pTotal}</div><div class="stat-label">Pantry Items</div></div>
+      <div class="stat-card"><div class="stat-icon green">🛒</div><div class="stat-value">${sTotal}</div><div class="stat-label">Shopping Items</div></div>
+    `;
+
+    // Matches preview
+    const matches = matchesPage.value?.content || [];
+    const ml = document.getElementById('matches-list');
+    if (!matches.length) { ml.innerHTML = emptyState('Add items to your pantry to see matching recipes!', '🥗'); return; }
+    ml.innerHTML = `<div class="item-list">${matches.slice(0,5).map(m => {
+      const r = m.recipe;
+      const statusClass = m.matchStatus === 'FULL_MATCH' ? 'badge-match-full' : m.matchStatus === 'PARTIAL_MATCH' ? 'badge-match-partial' : 'badge-match-none';
+      const label = m.matchStatus === 'FULL_MATCH' ? 'Ready!' : m.matchStatus === 'PARTIAL_MATCH' ? `${m.missingIngredients?.length} missing` : 'Missing items';
+      return `<div class="item-row">
+        <div style="flex:1">
+          <div class="item-name"><a href="recipes.html" style="color:inherit;text-decoration:none">${r.title}</a></div>
+          <div class="item-meta">${r.difficulty} · ${(r.prepTimeMinutes||0)+(r.cookTimeMinutes||0)} min</div>
+        </div>
+        <span class="badge ${statusClass}">${label}</span>
+      </div>`;
+    }).join('')}</div>`;
+  } catch(e) {
+    showAlert('Failed to load dashboard data', 'error');
+  }
+})();
+</script>
+</body>
+</html>
