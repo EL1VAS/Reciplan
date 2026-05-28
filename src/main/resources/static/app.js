@@ -131,7 +131,7 @@ function renderShell(pageTitle) {
           </button>
           <a href="dashboard.html" class="app-logo">
             <img src="reciplanLogo.png" alt="Reciplan logo" height="32"
-              style="width:auto;object-fit:contain;border-radius:var(--radius-md);">
+              style="width:auto;object-fit:contain; max-height:32px;">
             <span class="app-logo-text">RecipeApp</span>
           </a>
         </div>

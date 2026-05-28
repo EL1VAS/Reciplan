@@ -201,7 +201,9 @@ select {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-4) var(--space-6);
+  padding: var(--space-2) var(--space-6);
+  overflow: hidden;
+  height: 52px;
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-divider);
   box-shadow: var(--shadow-sm);
@@ -220,7 +222,7 @@ select {
 }
 .app-logo-text {
   font-family: var(--font-display);
-  font-size: var(--text-lg);
+  font-size: var(--text-base);
   color: var(--color-text);
   font-weight: 600;
 }
@@ -243,8 +245,8 @@ select {
   border-right: 1px solid var(--color-divider);
   padding: var(--space-6) 0;
   position: sticky;
-  top: 57px;
-  height: calc(100dvh - 57px);
+  top: 52px;
+  height: calc(100dvh - 52px);
   overflow-y: auto;
 }
 .nav-section {
