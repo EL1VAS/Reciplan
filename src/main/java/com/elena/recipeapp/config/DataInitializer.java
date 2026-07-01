@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 
 import com.elena.recipeapp.category.model.Category;
 import com.elena.recipeapp.category.repository.CategoryRepository;
-import com.elena.recipeapp.common.exceptions.ResourceNotFoundException;
 import com.elena.recipeapp.enums.Difficulty;
 import com.elena.recipeapp.enums.Roles;
 import com.elena.recipeapp.enums.Unit;
@@ -45,27 +44,31 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+
+        log.info("Starting data initialization...");
         seedUsers();
         seedCategories();
         seedIngredients();
         seedRecipes();
+
+        log.info("Data initialization completed.");
     }
 
    // Helper methods
 
    private Category category (String name) {
         return categoryRepository.findByNameIgnoreCase(name)
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found: " + name));
+                .orElseThrow(() -> new IllegalStateException("Category not found: " + name)); 
     }
 
     private Ingredient ingredient(String name) {
         return ingredientRepository.findByNameIgnoreCase(name)
-                .orElseThrow(() -> new ResourceNotFoundException("Ingredient not found: " + name));
+                .orElseThrow(() -> new IllegalStateException("Ingredient not found: " + name));
     }
 
     private User user(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + email));
+                .orElseThrow(() -> new IllegalStateException("User not found: " + email));
     }
 
     private RecipeIngredients line (String ingredientName, String quantity, Unit unit) {
@@ -85,6 +88,10 @@ public class DataInitializer implements CommandLineRunner {
                     .role(role)
                     .build();
             userRepository.save(user);
+
+            log.info("Seeded user: {}", email);
+        } else {
+            log.info("User already exists, skipping: {}", email);
         }
     }
 
@@ -94,6 +101,10 @@ public class DataInitializer implements CommandLineRunner {
                     .name(name)
                     .build();
             categoryRepository.save(category);
+
+            log.info("Seeded category: {}", name);
+        } else {
+            log.info("Category already exists, skipping: {}", name);
         }
     }
 
@@ -104,6 +115,10 @@ public class DataInitializer implements CommandLineRunner {
                     .category(category(categoryName))
                     .build();
             ingredientRepository.save(ingredient);
+
+            log.info("Seeded ingredient: {}", name);
+        } else {
+            log.info("Ingredient already exists, skipping: {}", name);
         }
     }
 
@@ -134,6 +149,10 @@ public class DataInitializer implements CommandLineRunner {
             lines.forEach(line -> line.setRecipe(recipe));
             recipe.setRecipeIngredients(lines);
             recipeRepository.save(recipe);
+
+            log.info("Seeded recipe: {}", title);
+        } else {
+            log.info("Recipe already exists, skipping: {}", title);
         }
     }
 
@@ -141,7 +160,7 @@ public class DataInitializer implements CommandLineRunner {
 
     private void seedUsers() {
         createUserIfNotExists("admin", "admin@recipeapp.com", adminPassword, Roles.ADMIN);
-        createUserIfNotExists("user", "user@recipeapp.com", userPassword, Roles.USER);
+        createUserIfNotExists("user", "elena@recipeapp.com", userPassword, Roles.USER);
 
         log.info("User seed completed.");                   
     }
@@ -155,6 +174,8 @@ public class DataInitializer implements CommandLineRunner {
         createCategoryIfNotExists("Spices / Herbs");
         createCategoryIfNotExists("Bread / Bakery");
         createCategoryIfNotExists("Oils / Vinegars");
+
+        log.info("Category seed completed.");
     }
 
     private void seedIngredients() {
@@ -181,16 +202,18 @@ public class DataInitializer implements CommandLineRunner {
         createIngredientIfNotExists("Chickpeas", "Canned / Jarred");
         createIngredientIfNotExists("Olive Oil", "Oils / Vinegars");
         createIngredientIfNotExists("Balsamic Vinegar", "Oils / Vinegars");
+
+        log.info("Ingredient seed completed.");
     }
 
     private void seedRecipes() {
         createRecipeIfNotExists(
                 "Pasta with tomato sauce",
                 "1. Boil pasta according to package instructions.\n" +
-                "2. In a separate pan, saute garlic and onion in olive oiluntil translucent.\n" +
+                "2. In a separate pan, saute garlic and onion in olive oil until translucent.\n" +
                 "3. Add tomato sauce, oregano, salt and black pepper and simmer for 10 minutes.\n" +
-                "3. Toss the cooked pasta with the tomato sauce.\n" +
-                "4. Serve hot with parmesan on top and enjoy!",
+                "4. Toss the cooked pasta with the tomato sauce.\n" +
+                "5. Serve hot with parmesan on top and enjoy!",
 
                 5,
                 25,
@@ -206,8 +229,8 @@ public class DataInitializer implements CommandLineRunner {
                     line("Onion", "1", Unit.PCS),
                     line("Olive Oil", "2", Unit.TBSP),
                     line("Oregano", "1", Unit.TSP),
-                    line("Salt", "1/2", Unit.TSP),
-                    line("Black Pepper", "1/2", Unit.TSP),
+                    line("Salt", "0.5", Unit.TSP),
+                    line("Black Pepper", "0.5", Unit.TSP),
                     line("Parmesan", "30", Unit.G)
                 )
         );
@@ -233,8 +256,8 @@ public class DataInitializer implements CommandLineRunner {
                 line("Onion", "1", Unit.PCS),
                 line("Olive Oil", "2", Unit.TBSP),
                 line("Oregano", "1", Unit.TSP),
-                line("Salt", "1/2", Unit.TSP),
-                line("Black Pepper", "1/2", Unit.TSP)
+                line("Salt", "0.5", Unit.TSP),
+                line("Black Pepper", "0.5", Unit.TSP)
             )
         );
 
@@ -254,14 +277,14 @@ public class DataInitializer implements CommandLineRunner {
             false,
             "admin@recipeapp.com",
             List.of(
-                line("Chicken Breast", "200", Unit.G),
+                line("Chicken breast", "200", Unit.G),
                 line("Spinach", "100", Unit.G),
                 line("Garlic", "2", Unit.PCS),
                 line("Onion", "1", Unit.PCS),
                 line("Olive Oil", "2", Unit.TBSP),
-                line("Salt", "1/2", Unit.TSP),
-                line("Black Pepper", "1/2", Unit.TSP),
-                line("Paprika", "1/2", Unit.TSP)
+                line("Salt", "0.5", Unit.TSP),
+                line("Black Pepper", "0.5", Unit.TSP),
+                line("Paprika", "0.5", Unit.TSP)
             )
         );
 
@@ -283,10 +306,12 @@ public class DataInitializer implements CommandLineRunner {
                 line("Tomato", "2", Unit.PCS),
                 line("Olive Oil", "2", Unit.TBSP),
                 line("Balsamic Vinegar", "1", Unit.TBSP),
-                line("Salt", "1/2", Unit.TSP),
-                line("Black Pepper", "1/2", Unit.TSP)
+                line("Salt", "0.5", Unit.TSP),
+                line("Black Pepper", "0.5", Unit.TSP)
             )
         );
+
+        log.info("Recipe seed completed.");
     }   
 }
 

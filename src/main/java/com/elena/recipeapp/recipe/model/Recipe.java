@@ -59,7 +59,7 @@ public class Recipe {
     @Column(nullable = false)
     private Integer prepTimeMinutes;
 
-    @Min(1)
+    @Min(0)
     @Column(nullable = false)
     private Integer cookTimeMinutes;
 
