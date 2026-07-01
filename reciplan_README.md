@@ -1,26 +1,26 @@
 # Reciplan
 
-Reciplan is a full-stack recipe planning application built to help users organize recipes, manage pantry ingredients, and turn available ingredients into practical meal ideas. It focuses on clean backend structure, secure API design, and a project architecture that can grow over time.[cite:179][cite:180]
+Reciplan is a full-stack recipe planning application designed to help users organize recipes, manage pantry ingredients, and turn available ingredients into practical meal ideas. The project emphasizes clean backend structure, secure API design, and an architecture built with future growth in mind.
 
 ## Overview
 
-The application combines recipe browsing, pantry tracking, shopping list generation, and user authentication in one system. It was designed to demonstrate backend development skills with Java and Spring Boot while keeping the project grounded in a realistic user problem: deciding what to cook with what is already at home.[cite:179][cite:180]
+The application brings together recipe browsing, pantry tracking, shopping list generation, and user authentication in one system. It was created as both a practical solution to a real-world problem and a portfolio project to showcase backend development skills with Java and Spring Boot.
 
 ## Features
 
-- User registration and login with JWT-based authentication.[cite:180][cite:184]
-- Pantry management for tracking ingredients already available at home.[cite:179][cite:185]
-- Recipe catalog with recipe details, categories, difficulty, and dietary filters such as vegetarian, lactose-free, and gluten-free.[cite:179][cite:182]
-- Recipe matching based on pantry contents, including support for identifying what can be made or what is almost possible with a few missing ingredients.[cite:179][cite:180][cite:187]
-- Shopping list support for missing ingredients needed for selected recipes.[cite:179][cite:185]
-- Admin management for recipes, ingredients, categories, and users.[cite:179][cite:180]
-- API documentation and testing support through Swagger/OpenAPI, Postman, and Insomnia.[cite:179]
+- User registration and login with JWT-based authentication.
+- Pantry management for tracking ingredients already available at home.
+- Recipe catalog with categories, difficulty levels, and dietary filters such as vegetarian, lactose-free, and gluten-free.
+- Recipe matching based on pantry contents, including support for identifying what can be made immediately and what is nearly possible with a few missing ingredients.
+- Shopping list generation for ingredients missing from selected recipes.
+- Admin management for recipes, ingredients, categories, and users.
+- API documentation through Swagger/OpenAPI and endpoint exploration with Insomnia.
 
 ## Architecture
 
-Reciplan is structured with modular packages to keep responsibilities clearly separated, including areas such as auth, category, ingredient, pantry, recipe, shopping-list, and user. This modular structure supports maintainability and reflects scalable architecture principles, even though advanced production-scaling features such as caching, performance profiling, and multi-instance deployment are not yet part of the implementation.[cite:179][cite:181]
+Reciplan is organized into modular packages with clearly separated responsibilities, including areas such as auth, category, ingredient, pantry, recipe, shopping-list, and user. This structure supports maintainability and reflects scalable architecture principles, while advanced production-scaling concerns such as caching, performance profiling, and multi-instance deployment remain planned future improvements.
 
-The backend follows a layered approach built around controllers, services, repositories, DTOs, configuration, and security components. That separation helps keep business logic organized, reduces coupling between layers, and makes the codebase easier to extend as new features are added.[cite:181][cite:184]
+The backend follows a layered architecture built around controllers, services, repositories, DTOs, configuration, and security components. This separation keeps business logic organized, reduces coupling between layers, and makes the codebase easier to extend over time.
 
 ## Tech Stack
 
@@ -40,10 +40,9 @@ The backend follows a layered approach built around controllers, services, repos
 
 - PostgreSQL
 
-### API and Testing
+### API and Testing Tools
 
 - Swagger / OpenAPI
-- Postman
 - Insomnia
 
 ### Frontend
@@ -54,57 +53,39 @@ The backend follows a layered approach built around controllers, services, repos
 
 ## Core Domain Model
 
-The project includes entities centered around users, ingredients, recipes, pantry items, recipe ingredients, shopping list items, and categories. The recipe-to-ingredient relationship is modeled through a join entity, which allows recipes to contain many ingredients while preserving structured relationships in a relational database design.[cite:185][cite:186]
+The project includes entities centered around users, ingredients, recipes, pantry items, recipe ingredients, shopping list items, and categories. The relationship between recipes and ingredients is modeled through a join entity, allowing recipes to contain multiple ingredients while preserving a clear and normalized relational database design.
 
-This structure supports features such as pantry-based recipe matching, grouped shopping lists, and admin-managed recipe creation. It also provides a strong foundation for future enhancements such as smarter matching logic, recommendation features, or AI-assisted recipe suggestions.[cite:179][cite:180]
+This model supports pantry-based recipe matching, grouped shopping lists, and admin-managed recipe creation. It also provides a strong foundation for future enhancements such as smarter matching logic, recommendation features, and AI-assisted recipe suggestions.
 
 ## Security
 
-Authentication and authorization are core parts of the application rather than afterthoughts. Reciplan includes token-based authentication with Spring Security and JWT, and the project design already accounts for protected endpoints and admin-only capabilities.[cite:180][cite:184]
+Authentication and authorization are built into the core of the application rather than added as an afterthought. Reciplan uses Spring Security with JWT-based authentication and includes support for protected endpoints and admin-only functionality.
 
 ## Project Goals
 
 Reciplan was built as both a practical application and a portfolio project. Its goals are to demonstrate:
 
-- Clean REST API design.[cite:180]
-- Thoughtful database modeling.[cite:182][cite:186]
-- Secure backend development practices.[cite:180][cite:184]
-- Maintainable and modular project organization.[cite:181][cite:184]
-- Scalable architecture thinking, with a structure prepared for future growth.[cite:179][cite:181]
+- Clean REST API design.
+- Thoughtful database modeling.
+- Secure backend development practices.
+- Maintainable and modular project organization.
+- Scalable architecture thinking, with a structure prepared for future growth.
 
 ## Current Status
 
-The project is actively being developed and refined. The existing implementation already covers core backend functionality and project structure, while leaving room for future improvements in performance, deployment strategy, and advanced scalability features.[cite:179][cite:181]
+The project is actively being developed and refined. The current implementation already covers core backend functionality and project structure, while leaving room for future improvements in testing, performance, deployment strategy, and advanced scalability features.
 
 ## Future Improvements
 
-Possible next steps for the project include:
+Planned next steps for the project include:
 
-- Adding caching for frequent read operations.
-- Measuring and improving query performance.
-- Expanding the frontend experience.
-- Improving deployment readiness.
-- Exploring AI-assisted recipe generation or recommendation features.[cite:179][cite:180]
-
-## Local Setup
-
-```bash
-git clone <your-repository-url>
-cd reciplan
-```
-
-Configure the database connection in `application.properties` or `application.yml`, then run the project with Maven:
-
-```bash
-./mvnw spring-boot:run
-```
-
-If Maven Wrapper is not included, use:
-
-```bash
-mvn spring-boot:run
-```
+- Expanding automated testing with JUnit and Spring Boot Test, including unit and integration coverage.
+- Improving query performance analysis.
+- Exploring caching for frequent read operations.
+- Strengthening deployment readiness.
+- Expanding frontend functionality and user experience.
+- Exploring AI-assisted recipe suggestions.
 
 ## Notes
 
-This repository highlights architecture, security, and backend design decisions as much as end-user functionality. The project is intentionally built with long-term maintainability in mind, aiming to balance practical features with a structure that can evolve over time.[cite:179][cite:181]
+This project is currently under active development and focuses primarily on backend architecture, security, and core application features. Setup and run instructions will be added as the project becomes more deployment-ready.
