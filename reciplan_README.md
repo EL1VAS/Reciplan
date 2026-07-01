@@ -20,7 +20,7 @@ The application brings together recipe browsing, pantry tracking, shopping list 
 
 Reciplan is organized into modular packages with clearly separated responsibilities, including areas such as auth, category, ingredient, pantry, recipe, shopping-list, and user. This structure supports maintainability and reflects scalable architecture principles, while advanced production-scaling concerns such as caching, performance profiling, and multi-instance deployment remain planned future improvements.
 
-The backend follows a layered architecture built around controllers, services, repositories, DTOs, configuration, and security components. This separation keeps business logic organized, reduces coupling between layers, and makes the codebase easier to extend over time.
+The backend follows a layered architecture built around controllers, services, repositories, DTOs, configuration, security components, and application logging with SLF4J. This separation keeps business logic organized, improves traceability, reduces coupling between layers, and makes the codebase easier to extend over time.
 
 ## Tech Stack
 
