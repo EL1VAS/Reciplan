@@ -7,6 +7,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import com.elena.recipeapp.category.model.Category;
+import com.elena.recipeapp.category.repository.CategoryRepository;
 import com.elena.recipeapp.enums.Roles;
 import com.elena.recipeapp.user.repository.UserRepository;
 
@@ -20,6 +22,7 @@ public class DataInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final CategoryRepository categoryRepository;
 
     @Value("${app.init.admin-password}")
     private String adminPassword;
@@ -29,8 +32,15 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
+        seedUsers();
 
-        if(userRepository.count() == 0) {
+        
+    }
+
+// Helper methods
+
+private void seedUsers() {
+    if(!userRepository.existsByEmail("admin@recipeapp.com") && !userRepository.existsByEmail("elena@recipeapp.com")) {
 
             User admin = User.builder()
                     .username("admin")
@@ -54,5 +64,24 @@ public class DataInitializer implements CommandLineRunner {
             log.info("Database already has data, skipping initialization");
         }
     }
-    
+
+private  void seedCategories() {
+    if (!categoryRepository.existsByNameIgnoreCase("Dairy & Eggs")) {
+        Category dairyAndEggs = Category.builder()
+                .name("Dairy & Eggs")
+                .build();
+
+        categoryRepository.save(dairyAndEggs);
+    }
+
+    if (!categoryRepository.existsByNameIgnoreCase("Meat & Seafood")) {
+        Category meatAndSeafood = Category.builder()
+                .name("Meat & Seafood")
+                .build();
+
+        categoryRepository.save(meatAndSeafood);
+    }
 }
+
+
+
