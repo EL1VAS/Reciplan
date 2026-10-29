@@ -2,6 +2,7 @@ package com.elena.recipeapp.category.service;
 
 import java.util.List;
 
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -84,6 +85,7 @@ public class CategoryService {
     }
 
     //Helper method
+    @NonNull 
     private Category findCategoryById(Long id) {
     return categoryRepository.findById(id).orElseThrow(() -> {
             log.warn("Category not found with id: {}", id);
